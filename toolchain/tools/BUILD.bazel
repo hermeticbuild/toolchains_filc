@@ -1,0 +1,18 @@
+package(default_visibility = ["//visibility:public"])
+
+exports_files([
+    "assemble.sh",
+    "guard.sh",
+    "linker.sh",
+    "unsupported.sh",
+])
+
+filegroup(
+    name = "linker_adapter",
+    srcs = ["linker.sh"],
+)
+
+filegroup(
+    name = "linker_rewrite",
+    srcs = ["linker_args.awk"],
+)

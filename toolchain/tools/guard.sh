@@ -1,5 +1,10 @@
 #!/bin/sh
 # A bounded supported-mode guard; target/resource/link policy lives in cc_args.
+# The linkage checks reject incompatible requests for the pinned distributions.
+# The raw-option checks below also enforce deliberately disabled integration
+# features (for example LTO), not a claim that Fil-C fundamentally rejects them.
+# They inspect direct argv only; this is not a security boundary or a complete
+# option parser for arbitrary user response files.
 set -eu
 # Link argv commonly arrives in a response file. Action-scoped capability
 # markers keep rejection independent of driver response-file parsing.

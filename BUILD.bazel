@@ -1,22 +1,6 @@
 load("@bazel_skylib//lib:selects.bzl", "selects")
-load("@rules_cc//cc/toolchains:actions.bzl", "cc_action_type")
 
 package(default_visibility = ["//visibility:public"])
-
-exports_files([
-    "guard.sh",
-    "assemble.sh",
-    "check_bundle.sh",
-    "linker.sh",
-    "linker_args.awk",
-    "unsupported.sh",
-    "sarcasm.sh.tpl",
-])
-
-cc_action_type(
-    name = "helper_probe_action",
-    action_name = "filc-helper-probe",
-)
 
 constraint_setting(name = "application_abi")
 
@@ -51,11 +35,6 @@ platform(
         "@platforms//cpu:aarch64",
         "abi",
     ],
-)
-
-cc_action_type(
-    name = "inspect_action",
-    action_name = "filc-inspect",
 )
 
 platform(
@@ -119,15 +98,5 @@ platform(
 )
 
 toolchain_type(name = "runtime_toolchain_type")
-
-filegroup(
-    name = "linker_adapter",
-    srcs = ["linker.sh"],
-)
-
-filegroup(
-    name = "linker_rewrite",
-    srcs = ["linker_args.awk"],
-)
 
 toolchain_type(name = "test_toolchain_type")

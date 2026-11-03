@@ -1,0 +1,9 @@
+load("@rules_cc//cc/toolchains:actions.bzl", "cc_action_type")
+
+exports_files(["check_bundle.sh"])
+
+cc_action_type(
+    name = "inspect_action",
+    action_name = "filc-inspect",
+    visibility = ["//visibility:public"],
+)

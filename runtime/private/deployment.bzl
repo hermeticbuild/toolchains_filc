@@ -1,9 +1,11 @@
 """Relocatable deployment of ordinary dynamically linked Fil-C cc_binary targets."""
 
-load("@rules_cc//cc:find_cc_toolchain.bzl", "find_cc_toolchain", "use_cc_toolchain")
+load("@rules_cc//cc:find_cc_toolchain.bzl", "find_cc_toolchain")
 load("@rules_cc//cc/common:cc_common.bzl", "cc_common")
 
-_RUNTIME = Label("//:runtime_toolchain_type")
+visibility(["//runtime"])
+
+RUNTIME_TOOLCHAIN = Label("//:runtime_toolchain_type")
 
 def _quote(value):
     return "'" + value.replace("'", "'\\''") + "'"
@@ -27,8 +29,8 @@ def _library(copies, libraries, aliases, file):
     libraries[file.basename] = file
     _copy(copies, file, "lib/" + file.basename)
 
-def _run_impl(ctx):
-    runtime = ctx.toolchains[_RUNTIME]
+def run_impl(ctx):
+    runtime = ctx.toolchains[RUNTIME_TOOLCHAIN]
     cc = find_cc_toolchain(ctx)
     configuration = cc_common.configure_features(ctx = ctx, cc_toolchain = cc, requested_features = ctx.features, unsupported_features = ctx.disabled_features)
     readelf = cc_common.get_tool_for_action(feature_configuration = configuration, action_name = "filc-inspect")
@@ -112,26 +114,9 @@ exec "$root/lib/{loader}" --library-path "$root/lib" "$root/bin/app" "$@"
         runfiles = ctx.runfiles(files = [bundle]),
     )]
 
-_ATTRS = {
+RUN_ATTRS = {
     "binary": attr.label(mandatory = True, cfg = "target"),
     "plugins": attr.label_list(allow_files = True),
     "_test": attr.bool(default = False),
-    "_check": attr.label(default = "//:check_bundle.sh", allow_single_file = True),
+    "_check": attr.label(default = "//runtime:check_bundle.sh", allow_single_file = True),
 }
-
-filc_run = rule(
-    implementation = _run_impl,
-    attrs = _ATTRS,
-    executable = True,
-    fragments = ["cpp"],
-    toolchains = [_RUNTIME] + use_cc_toolchain(),
-)
-
-filc_test = rule(
-    implementation = _run_impl,
-    attrs = _ATTRS | {"_test": attr.bool(default = True)},
-    test = True,
-    exec_groups = {"test": exec_group(toolchains = [Label("//:test_toolchain_type")])},
-    fragments = ["cpp"],
-    toolchains = [_RUNTIME] + use_cc_toolchain(),
-)

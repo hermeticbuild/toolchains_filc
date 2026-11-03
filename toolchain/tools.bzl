@@ -7,11 +7,11 @@ def tools(name, compiler):
     compiler = Label(compiler)
     cc_tool(
         name = name + "_driver",
-        src = "@toolchains_filc//:guard.sh",
+        src = "@toolchains_filc//toolchain/tools:guard.sh",
         # rules_cc's compiler_files also supplies .s/.S actions.
         data = [
             compiler,
-            "@toolchains_filc//:assemble.sh",
+            "@toolchains_filc//toolchain/tools:assemble.sh",
             "@llvm//tools:clang",
         ],
         env = {
@@ -22,7 +22,7 @@ def tools(name, compiler):
         format = {
             "compiler": compiler,
             "assembler": "@llvm//tools:clang",
-            "shim": "@toolchains_filc//:assemble.sh",
+            "shim": "@toolchains_filc//toolchain/tools:assemble.sh",
         },
         capabilities = [
             "@rules_cc//cc/toolchains/capabilities:supports_pic",
@@ -31,11 +31,11 @@ def tools(name, compiler):
     )
     cc_tool(
         name = name + "_linker_driver",
-        src = "@toolchains_filc//:guard.sh",
+        src = "@toolchains_filc//toolchain/tools:guard.sh",
         data = [
             compiler,
-            "@toolchains_filc//:linker.sh",
-            "@toolchains_filc//:linker_rewrite",
+            "@toolchains_filc//toolchain/tools:linker.sh",
+            "@toolchains_filc//toolchain/tools:linker_rewrite",
             "@llvm//tools:ld.lld",
         ],
         env = {
@@ -46,7 +46,7 @@ def tools(name, compiler):
         format = {
             "compiler": compiler,
             "linker": "@llvm//tools:ld.lld",
-            "rewrite": "@toolchains_filc//:linker_rewrite",
+            "rewrite": "@toolchains_filc//toolchain/tools:linker_rewrite",
         },
     )
     cc_tool(
@@ -77,7 +77,7 @@ def tools(name, compiler):
     )
     cc_tool(
         name = name + "_unsupported",
-        src = "@toolchains_filc//:unsupported.sh",
+        src = "@toolchains_filc//toolchain/tools:unsupported.sh",
     )
     cc_tool_map(
         name = name + "_tools",
@@ -98,7 +98,6 @@ def tools(name, compiler):
             "@rules_cc//cc/toolchains/actions:lto_index_for_dynamic_library": name + "_unsupported",
             "@rules_cc//cc/toolchains/actions:lto_index_for_nodeps_dynamic_library": name + "_unsupported",
             "@rules_cc//cc/toolchains/actions:lto_backend": name + "_unsupported",
-            "@toolchains_filc//:helper_probe_action": compiler.same_package_label("helper_tool"),
-            "@toolchains_filc//:inspect_action": name + "_readelf",
+            "@toolchains_filc//runtime:inspect_action": name + "_readelf",
         },
     )

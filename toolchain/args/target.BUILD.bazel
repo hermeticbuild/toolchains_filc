@@ -107,7 +107,7 @@ cc_args(
     },
     format = {
         "runtime": "//target:dynamic_runtime",
-        "adapter": "@toolchains_filc//:linker_adapter",
+        "adapter": "@toolchains_filc//toolchain/tools:linker_adapter",
     },
     # linkstatic controls application dependencies. Optfil lacks a static
     # native runtime closure, so both dependency modes use dynamic libc.
@@ -133,6 +133,6 @@ cc_args(
     },
     format = {
         "runtime": "//target:dynamic_runtime",
-        "adapter": "@toolchains_filc//:linker_adapter",
+        "adapter": "@toolchains_filc//toolchain/tools:linker_adapter",
     },
 )

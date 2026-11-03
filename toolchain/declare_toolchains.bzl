@@ -1,6 +1,6 @@
 """Bind execution installations and register the isolated Fil-C matrix."""
 
-load("@toolchains_filc//:runtime.bzl", "filc_runtime")
+load("@toolchains_filc//runtime:filc_runtime.bzl", "filc_runtime")
 load(":cc_toolchain.bzl", "filc_cc_toolchain")
 load(":tools.bzl", "tools")
 

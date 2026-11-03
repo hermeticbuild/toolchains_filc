@@ -1,6 +1,5 @@
 load("@bazel_skylib//rules/directory:directory.bzl", "directory")
 load("@bazel_skylib//rules/directory:subdirectory.bzl", "subdirectory")
-load("@rules_cc//cc/toolchains:tool.bzl", "cc_tool")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -206,12 +205,6 @@ subdirectory(
     name = "dynamic_runtime",
     parent = "dynamic_runtime_files",
     path = "pizfix/lib",
-)
-
-cc_tool(
-    name = "helper_tool",
-    src = "pizfix/bin/sarcasm",
-    data = ["helper_resources"],
 )
 
 # libc++.so is a linker script; deployment needs only the ELF aliases.

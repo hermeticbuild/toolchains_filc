@@ -1,5 +1,8 @@
 #!/bin/sh
 # Verify deployment closure using the execution-platform ELF inspector.
+# This runs while packaging user binaries, before any test or application runs.
+# Check interpreter, machine, SONAME collisions and DT_NEEDED closure here so a
+# malformed bundle cannot defer missing-library resolution to the target host.
 set -eu
 readelf=$1
 root=$2

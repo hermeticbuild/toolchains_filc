@@ -1,6 +1,7 @@
 exports_files([
     "distribution.BUILD.bazel",
     "glibc.BUILD.bazel",
+    "sarcasm.sh.tpl",
     "target.BUILD.bazel",
     "toolchains.BUILD.bazel",
 ])
