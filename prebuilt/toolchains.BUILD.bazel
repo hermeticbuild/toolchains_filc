@@ -2,13 +2,4 @@ load("@toolchains_filc//toolchain:declare_toolchains.bzl", "declare_toolchains")
 
 package(default_visibility = ["//visibility:public"])
 
-declare_toolchains(
-    compilers = {
-        "x86_64": "{compilers_x86_64}",
-        "aarch64": "{compilers_aarch64}",
-    },
-    targets = {
-        "x86_64": "{targets_x86_64}",
-        "aarch64": "{targets_aarch64}",
-    },
-)
+declare_toolchains()

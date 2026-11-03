@@ -2,11 +2,15 @@
 
 load("@rules_cc//cc/toolchains:toolchain.bzl", "cc_toolchain")
 
-def filc_cc_toolchain(name, tool_map, args):
+def filc_cc_toolchain(name, tool_map, resource_args):
     cc_toolchain(
         name = name,
         tool_map = tool_map,
-        args = [args],
+        args = [
+            "@toolchains_filc//toolchain:driver_configuration",
+            resource_args,
+            "@toolchains_filc//toolchain:toolchain_args",
+        ],
         # Mode defaults precede protocol features carrying user compile flags.
         enabled_features = [
             "@toolchains_filc//toolchain/features:no_legacy",

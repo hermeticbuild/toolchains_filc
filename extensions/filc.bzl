@@ -1,6 +1,6 @@
 """Explicit Fil-C registration for matched Linux target stacks."""
 
-load("//prebuilt:releases.bzl", "ARCHIVES", "GLIBC_ARCHIVES", "VERSION")
+load("//prebuilt:releases.bzl", "ARCHIVES", "VERSION")
 load("//prebuilt/repositories:filc_distribution.bzl", "filc_distribution")
 load("//prebuilt/repositories:filc_toolchains.bzl", "filc_toolchains")
 load("//prebuilt/repositories:optfil_distribution.bzl", "optfil_distribution")
@@ -15,15 +15,12 @@ def _filc_impl(mctx):
         for role in ["exec", "target"]:
             filc_distribution(name = "filc_{}_{}".format(role, arch), arch = arch)
         optfil_distribution(name = "filc_glibc_target_" + arch, arch = arch)
-    filc_toolchains(
-        name = "filc_toolchains",
-        compilers = {"@filc_exec_{}//:compiler".format(arch): arch for arch in ARCHIVES},
-        targets = {"@filc_target_{}//:c_headers".format(arch): arch for arch in ARCHIVES},
-        glibc_targets = {"@filc_glibc_target_{}//:headers".format(arch): arch for arch in GLIBC_ARCHIVES},
-        # Resolve the shared repository in this module's mapping. The target
-        # honors the target CPU/kernel constraints and the root MODULE default.
-        kernel_headers = Label("@kernel_headers//:kernel_headers_directory"),
-    )
+    filc_toolchains(name = "filc_toolchains")
+    for module in mctx.modules:
+        if module.is_root and module.name == "toolchains_filc":
+            # This module owns the distribution mappings used by its BUILD
+            # files; consumers only need the registration repository.
+            return mctx.extension_metadata(root_module_direct_deps = "all", root_module_direct_dev_deps = [])
     return mctx.extension_metadata(root_module_direct_deps = ["filc_toolchains"], root_module_direct_dev_deps = [])
 
 filc = module_extension(

@@ -1,0 +1,157 @@
+load("@bazel_skylib//rules/directory:subdirectory.bzl", "subdirectory")
+
+package(default_visibility = ["//visibility:public"])
+
+alias(
+    name = "glibc_x86_64_headers",
+    actual = "@filc_glibc_target_x86_64//:headers",
+)
+
+alias(
+    name = "glibc_aarch64_headers",
+    actual = "@filc_glibc_target_aarch64//:headers",
+)
+
+subdirectory(
+    name = "glibc_x86_64_cxx_headers",
+    parent = "glibc_x86_64_headers",
+    path = "c++/v1",
+)
+
+subdirectory(
+    name = "glibc_aarch64_cxx_headers",
+    parent = "glibc_aarch64_headers",
+    path = "c++/v1",
+)
+
+subdirectory(
+    name = "glibc_x86_64_cxx_config_headers",
+    parent = "glibc_x86_64_headers",
+    path = "x86_64-unknown-linux-gnu/c++/v1",
+)
+
+subdirectory(
+    name = "glibc_aarch64_cxx_config_headers",
+    parent = "glibc_aarch64_headers",
+    path = "aarch64-unknown-linux-gnu/c++/v1",
+)
+
+# Select the matched target libc and CPU together. Do not let an unsupported
+# libc request resolve to Pizfix musl merely because its CPU is available.
+alias(
+    name = "c_headers",
+    actual = select(
+        {
+            "@llvm//platforms/config:linux_x86_64_musl": "@filc_target_x86_64//:c_headers",
+            "@llvm//platforms/config:linux_aarch64_musl": "@filc_target_aarch64//:c_headers",
+            "@llvm//platforms/config:linux_x86_64_gnu.2.44": "glibc_x86_64_headers",
+            "@llvm//platforms/config:linux_aarch64_gnu.2.44": "glibc_aarch64_headers",
+        },
+        no_match_error = "Fil-C target bundles require explicit Linux musl or glibc 2.44",
+    ),
+)
+
+alias(
+    name = "stdfil_headers",
+    actual = select(
+        {
+            "@llvm//platforms/config:linux_x86_64_musl": "@filc_target_x86_64//:stdfil_headers",
+            "@llvm//platforms/config:linux_aarch64_musl": "@filc_target_aarch64//:stdfil_headers",
+            "@llvm//platforms/config:linux_x86_64_gnu.2.44": "glibc_x86_64_headers",
+            "@llvm//platforms/config:linux_aarch64_gnu.2.44": "glibc_aarch64_headers",
+        },
+        no_match_error = "Fil-C target bundles require explicit Linux musl or glibc 2.44",
+    ),
+)
+
+alias(
+    name = "cxx_headers",
+    actual = select(
+        {
+            "@llvm//platforms/config:linux_x86_64_musl": "@filc_target_x86_64//:cxx_headers",
+            "@llvm//platforms/config:linux_aarch64_musl": "@filc_target_aarch64//:cxx_headers",
+            "@llvm//platforms/config:linux_x86_64_gnu.2.44": "glibc_x86_64_cxx_headers",
+            "@llvm//platforms/config:linux_aarch64_gnu.2.44": "glibc_aarch64_cxx_headers",
+        },
+        no_match_error = "Fil-C target bundles require explicit Linux musl or glibc 2.44",
+    ),
+)
+
+alias(
+    name = "cxx_config_headers",
+    actual = select(
+        {
+            "@llvm//platforms/config:linux_x86_64_musl": "@filc_target_x86_64//:cxx_config_headers",
+            "@llvm//platforms/config:linux_aarch64_musl": "@filc_target_aarch64//:cxx_config_headers",
+            "@llvm//platforms/config:linux_x86_64_gnu.2.44": "glibc_x86_64_cxx_config_headers",
+            "@llvm//platforms/config:linux_aarch64_gnu.2.44": "glibc_aarch64_cxx_config_headers",
+        },
+        no_match_error = "Fil-C target bundles require explicit Linux musl or glibc 2.44",
+    ),
+)
+
+alias(
+    name = "runtime",
+    actual = select(
+        {
+            "@llvm//platforms/config:linux_x86_64_musl": "@filc_target_x86_64//:runtime",
+            "@llvm//platforms/config:linux_aarch64_musl": "@filc_target_aarch64//:runtime",
+            "@llvm//platforms/config:linux_x86_64_gnu.2.44": "@filc_glibc_target_x86_64//:runtime",
+            "@llvm//platforms/config:linux_aarch64_gnu.2.44": "@filc_glibc_target_aarch64//:runtime",
+        },
+        no_match_error = "Fil-C target bundles require explicit Linux musl or glibc 2.44",
+    ),
+)
+
+alias(
+    name = "dynamic_runtime",
+    actual = select(
+        {
+            "@llvm//platforms/config:linux_x86_64_musl": "@filc_target_x86_64//:dynamic_runtime",
+            "@llvm//platforms/config:linux_aarch64_musl": "@filc_target_aarch64//:dynamic_runtime",
+            "@llvm//platforms/config:linux_x86_64_gnu.2.44": "@filc_glibc_target_x86_64//:runtime",
+            "@llvm//platforms/config:linux_aarch64_gnu.2.44": "@filc_glibc_target_aarch64//:runtime",
+        },
+        no_match_error = "Fil-C target bundles require explicit Linux musl or glibc 2.44",
+    ),
+)
+
+alias(
+    name = "dynamic_loader",
+    actual = select(
+        {
+            "@llvm//platforms/config:linux_x86_64_musl": "@filc_target_x86_64//:dynamic_loader",
+            "@llvm//platforms/config:linux_aarch64_musl": "@filc_target_aarch64//:dynamic_loader",
+            "@llvm//platforms/config:linux_x86_64_gnu.2.44": "@filc_glibc_target_x86_64//:dynamic_loader",
+            "@llvm//platforms/config:linux_aarch64_gnu.2.44": "@filc_glibc_target_aarch64//:dynamic_loader",
+        },
+        no_match_error = "Fil-C target bundles require explicit Linux musl or glibc 2.44",
+    ),
+)
+
+alias(
+    name = "runtime_dsos",
+    actual = select(
+        {
+            "@llvm//platforms/config:linux_x86_64_musl": "@filc_target_x86_64//:runtime_dsos",
+            "@llvm//platforms/config:linux_aarch64_musl": "@filc_target_aarch64//:runtime_dsos",
+            "@llvm//platforms/config:linux_x86_64_gnu.2.44": "@filc_glibc_target_x86_64//:runtime_dsos",
+            "@llvm//platforms/config:linux_aarch64_gnu.2.44": "@filc_glibc_target_aarch64//:runtime_dsos",
+        },
+        no_match_error = "Fil-C target bundles require explicit Linux musl or glibc 2.44",
+    ),
+)
+
+alias(
+    name = "kernel_headers",
+    # Pizfix supplies no UAPI; Optfil already bundles it in its mixed tree.
+    # The shared kernel extension's version selection applies only to musl.
+    actual = select(
+        {
+            "@llvm//constraints/libc:musl": "@kernel_headers//:kernel_headers_directory",
+            "@llvm//platforms/config:linux_x86_64_gnu.2.44": "glibc_x86_64_headers",
+            "@llvm//platforms/config:linux_aarch64_gnu.2.44": "glibc_aarch64_headers",
+        },
+        no_match_error = "Fil-C target bundles require explicit Linux musl or glibc 2.44",
+    ),
+)

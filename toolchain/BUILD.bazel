@@ -1,2 +1,39 @@
-# Complete ordered composition: toolchain.BUILD.bazel, instantiated per execution CPU.
-exports_files(["toolchain.BUILD.bazel"])
+load("@rules_cc//cc/toolchains:args_list.bzl", "cc_args_list")
+
+package(default_visibility = ["//visibility:public"])
+
+# cc_toolchain places its explicitly bound execution resource arguments between
+# driver configuration and the target header/runtime arguments below.
+cc_args_list(
+    name = "driver_configuration",
+    args = [
+        "//toolchain/args:pie_policy",
+        "//toolchain/args:hermetic_driver_config",
+        "//toolchain/args:target_flags",
+    ],
+)
+
+cc_args_list(
+    name = "toolchain_args",
+    args = [
+        # Keep external system directories before the target C/C++ headers,
+        # following the common toolchain's include precedence.
+        "@rules_cc//cc/toolchains/args/external_include_paths:external_include_paths",
+        "//toolchain/args:c_header_search_paths",
+        "//toolchain/args:assembly_target_flags",
+        "//toolchain/args:raw_assembly_flags",
+        "//toolchain/args:embed_flags",
+        "//toolchain/args:cxx_header_search_paths",
+        "//toolchain/args:deterministic_compile_flags",
+        "//toolchain/args:default_compile_flags",
+        "//toolchain/args:default_cxx_compile_flags",
+        "//toolchain/args:default_link_flags",
+        "//toolchain/args:sysroot_flags",
+        "//toolchain/args:linker",
+        "//toolchain/args:dynamic_startfiles_and_libs",
+        "//toolchain/args:shared_startfiles_and_libs",
+    ] + select({
+        "@llvm//constraints/libc:musl": ["//toolchain/args:static_startfiles_and_libs"],
+        "@llvm//constraints/libc:gnu.2.44": ["//toolchain/args:glibc_fully_static_link_guard"],
+    }),
+)

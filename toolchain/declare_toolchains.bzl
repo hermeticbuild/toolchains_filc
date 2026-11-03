@@ -1,19 +1,19 @@
 """Bind execution installations and register the isolated Fil-C matrix."""
 
 load("@toolchains_filc//runtime:filc_runtime.bzl", "filc_runtime")
+load("//toolchain/args:resource_directory_args.bzl", "resource_directory_args")
 load(":cc_toolchain.bzl", "filc_cc_toolchain")
-load(":tools.bzl", "tools")
 
-def declare_toolchains(compilers, targets):
+def declare_toolchains():
     """Bind fixed execution installations separately from target bundle labels."""
 
     # Target aliases select a complete matched libc/CPU stack independently
     # from the execution compiler. Reject unspecified or unsupported libcs.
-    for arch in targets:
+    for arch in ["x86_64", "aarch64"]:
         filc_runtime(
             name = "runtime_" + arch,
-            loader = "//target:dynamic_loader",
-            libraries = "//target:runtime_dsos",
+            loader = "@toolchains_filc//target:dynamic_loader",
+            libraries = "@toolchains_filc//target:runtime_dsos",
             target_compatible_with = [
                 "@platforms//os:linux",
                 "@platforms//cpu:" + arch,
@@ -46,17 +46,24 @@ def declare_toolchains(compilers, targets):
             ],
             target_settings = ["@toolchains_filc//:supported_libc"],
         )
-    for exec_arch, compiler in compilers.items():
-        tools(
-            name = "linux_" + exec_arch,
-            compiler = compiler,
+    for exec_arch, compiler in {
+        "x86_64": Label("@filc_exec_x86_64//:compiler"),
+        "aarch64": Label("@filc_exec_aarch64//:compiler"),
+    }.items():
+        # Bind resources to the same fixed installation as the execution tool
+        # map. These arguments are target-configured; selecting by target CPU
+        # here would choose the wrong executable helpers when cross compiling.
+        resource_directory_args(
+            name = "linux_" + exec_arch + "_resource_directory_args",
+            builtin_resources = compiler.same_package_label("builtin_resources"),
+            helper_resources = compiler.same_package_label("helper_resources"),
         )
         filc_cc_toolchain(
             name = "linux_" + exec_arch + "_cc",
-            tool_map = "linux_" + exec_arch + "_tools",
-            args = "//toolchain/" + exec_arch + ":toolchain_args",
+            tool_map = "@toolchains_filc//toolchain/tools:linux_" + exec_arch + "_tools",
+            resource_args = "linux_" + exec_arch + "_resource_directory_args",
         )
-        for target_arch in targets:
+        for target_arch in ["x86_64", "aarch64"]:
             native.toolchain(
                 name = "linux_" + exec_arch + "_to_linux_" + target_arch,
                 toolchain = "linux_" + exec_arch + "_cc",

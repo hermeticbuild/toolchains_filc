@@ -1,3 +1,5 @@
+load("//toolchain:tools.bzl", "tools")
+
 package(default_visibility = ["//visibility:public"])
 
 exports_files([
@@ -15,4 +17,14 @@ filegroup(
 filegroup(
     name = "linker_rewrite",
     srcs = ["linker_args.awk"],
+)
+
+tools(
+    name = "linux_x86_64",
+    compiler = "@filc_exec_x86_64//:compiler",
+)
+
+tools(
+    name = "linux_aarch64",
+    compiler = "@filc_exec_aarch64//:compiler",
 )
