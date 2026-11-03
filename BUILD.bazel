@@ -47,30 +47,9 @@ platform(
     ],
 )
 
-platform(
-    name = "linux_aarch64_worker",
-    constraint_values = [
-        "@platforms//os:linux",
-        "@platforms//cpu:aarch64",
-        "worker",
-    ],
-    exec_properties = {
-        "container-image": "docker://ubuntu@sha256:a8fb2ba88181746111cbbe2969826d6546b71226785b196c93d2c3445a25000d",
-        "Arch": "arm64",
-        "OSFamily": "Linux",
-    },
-)
-
 constraint_value(
     name = "abi",
     constraint_setting = "application_abi",
-)
-
-constraint_setting(name = "execution_environment")
-
-constraint_value(
-    name = "worker",
-    constraint_setting = "execution_environment",
 )
 
 platform(
@@ -81,20 +60,6 @@ platform(
         "@platforms//cpu:x86_64",
         "abi",
     ],
-)
-
-platform(
-    name = "linux_x86_64_worker",
-    constraint_values = [
-        "@platforms//os:linux",
-        "@platforms//cpu:x86_64",
-        "worker",
-    ],
-    exec_properties = {
-        "container-image": "docker://ubuntu@sha256:8a2321a92b438238f93b4346fff61bc4259c99fdd4d9b52ee86f153fee0c344f",
-        "Arch": "amd64",
-        "OSFamily": "Linux",
-    },
 )
 
 toolchain_type(name = "runtime_toolchain_type")

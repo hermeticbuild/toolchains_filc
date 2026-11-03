@@ -71,7 +71,6 @@ def declare_toolchains():
                 exec_compatible_with = [
                     "@platforms//os:linux",
                     "@platforms//cpu:" + exec_arch,
-                    "@toolchains_filc//:worker",
                 ],
                 target_compatible_with = [
                     "@platforms//os:linux",
