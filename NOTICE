@@ -1,3 +1,12 @@
+toolchain/tools/linker_args.awk is ported and adapted from LLVM 21.1.8's
+TokenizeGNUCommandLine in llvm/lib/Support/CommandLine.cpp:
+https://github.com/llvm/llvm-project/blob/llvmorg-21.1.8/llvm/lib/Support/CommandLine.cpp
+Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+The complete license is in toolchain/tools/LLVM-LICENSE.txt.
+
+Fil-C compiler/runtime distributions are downloaded separately and retain their
+upstream licenses. See prebuilt/LICENSING.md for their scope and deployment.
+
 toolchains_filc includes code derived from hermetic-llvm.
 The following upstream copyright and license notice is retained for that code.
 

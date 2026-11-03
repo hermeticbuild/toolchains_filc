@@ -46,6 +46,10 @@ def run_impl(ctx):
     copies = {}
     inputs = []
 
+    for file in runtime.licenses.to_list():
+        _copy(copies, file, "licenses/fil-c/" + file.basename)
+    for file in ctx.files._licenses:
+        _copy(copies, file, "licenses/toolchains_filc/" + file.basename)
     for file in runtime.libraries.to_list():
         _library(copies, libraries, aliases, file)
     _library(copies, libraries, aliases, runtime.loader)
@@ -119,4 +123,13 @@ RUN_ATTRS = {
     "plugins": attr.label_list(allow_files = True),
     "_test": attr.bool(default = False),
     "_check": attr.label(default = "//runtime:check_bundle.sh", allow_single_file = True),
+    "_licenses": attr.label_list(
+        default = [
+            Label("//:LICENSE"),
+            Label("//:NOTICE"),
+            Label("//prebuilt:LICENSING.md"),
+            Label("//toolchain/tools:LLVM-LICENSE.txt"),
+        ],
+        allow_files = True,
+    ),
 }

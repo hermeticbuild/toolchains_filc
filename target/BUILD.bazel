@@ -143,6 +143,19 @@ alias(
 )
 
 alias(
+    name = "runtime_licenses",
+    actual = select(
+        {
+            "@llvm//platforms/config:linux_x86_64_musl": "@filc_target_x86_64//:runtime_licenses",
+            "@llvm//platforms/config:linux_aarch64_musl": "@filc_target_aarch64//:runtime_licenses",
+            "@llvm//platforms/config:linux_x86_64_gnu.2.44": "@filc_glibc_target_x86_64//:runtime_licenses",
+            "@llvm//platforms/config:linux_aarch64_gnu.2.44": "@filc_glibc_target_aarch64//:runtime_licenses",
+        },
+        no_match_error = "Fil-C target bundles require explicit Linux musl or glibc 2.44",
+    ),
+)
+
+alias(
     name = "kernel_headers",
     # Pizfix supplies no UAPI; Optfil already bundles it in its mixed tree.
     # The shared kernel extension's version selection applies only to musl.

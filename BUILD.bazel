@@ -2,6 +2,11 @@ load("@bazel_skylib//lib:selects.bzl", "selects")
 
 package(default_visibility = ["//visibility:public"])
 
+exports_files([
+    "LICENSE",
+    "NOTICE",
+])
+
 constraint_setting(name = "application_abi")
 
 selects.config_setting_group(

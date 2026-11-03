@@ -1,4 +1,5 @@
 exports_files([
+    "LICENSING.md",
     "distribution.BUILD.bazel",
     "glibc.BUILD.bazel",
     "sarcasm.sh.tpl",

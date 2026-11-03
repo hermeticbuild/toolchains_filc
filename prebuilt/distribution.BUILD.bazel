@@ -3,6 +3,18 @@ load("@bazel_skylib//rules/directory:subdirectory.bzl", "subdirectory")
 
 package(default_visibility = ["//visibility:public"])
 
+# Keep notices separate from compile/link inputs. Deployment and downstream
+# packaging consume them alongside the target runtime.
+filegroup(
+    name = "runtime_licenses",
+    srcs = [
+        "LLVM-LICENSE.txt",
+        "MUSL-LICENSE.txt",
+        "PAS-LICENSE.txt",
+        "README.md",
+    ],
+)
+
 exports_files([
     "build/bin/clang",
     "pizfix/bin/sarcasm",

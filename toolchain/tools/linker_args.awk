@@ -1,4 +1,8 @@
-# Port of LLVM 21.1.8 TokenizeGNUCommandLine (UTF-8 response files):
+# Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+# See LLVM-LICENSE.txt for license information.
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+#
+# Ported and adapted for Fil-C from LLVM 21.1.8 TokenizeGNUCommandLine:
 # https://github.com/llvm/llvm-project/blob/llvmorg-21.1.8/llvm/lib/Support/CommandLine.cpp
 # Whitespace, single/double quotes, escapes; empty tokens are discarded.
 # Flatten nested response files so the exact CRT RUNPATH rewrite also applies

@@ -14,6 +14,7 @@ def declare_toolchains():
             name = "runtime_" + arch,
             loader = "@toolchains_filc//target:dynamic_loader",
             libraries = "@toolchains_filc//target:runtime_dsos",
+            licenses = "@toolchains_filc//target:runtime_licenses",
             target_compatible_with = [
                 "@platforms//os:linux",
                 "@platforms//cpu:" + arch,

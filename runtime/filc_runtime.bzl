@@ -4,6 +4,7 @@ def _runtime_impl(ctx):
     return [platform_common.ToolchainInfo(
         loader = ctx.file.loader,
         libraries = depset(ctx.files.libraries),
+        licenses = depset(ctx.files.licenses),
     )]
 
 filc_runtime = rule(
@@ -11,5 +12,6 @@ filc_runtime = rule(
     attrs = {
         "loader": attr.label(allow_single_file = True, mandatory = True),
         "libraries": attr.label(allow_files = True, mandatory = True),
+        "licenses": attr.label(allow_files = True, mandatory = True),
     },
 )

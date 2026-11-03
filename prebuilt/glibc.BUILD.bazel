@@ -3,6 +3,17 @@ load("@bazel_skylib//rules/directory:subdirectory.bzl", "subdirectory")
 
 package(default_visibility = ["//visibility:public"])
 
+# Only the selected libc/C++/Fil-C runtime is deployed, not Optfil's userland.
+filegroup(
+    name = "runtime_licenses",
+    srcs = [
+        "LLVM-LICENSE.txt",
+        "PAS-LICENSE.txt",
+        "README.md",
+        "additional_licenses/glibc-LICENSE.txt",
+    ],
+)
+
 # Optfil mixes libc, stdfil, C++, UAPI and userland headers. Preserve this
 # complete tree, including its bundled UAPI. Kernel version selection through
 # the shared kernel extension applies only to the Pizfix musl stack.
