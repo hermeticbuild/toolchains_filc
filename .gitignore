@@ -1,0 +1,7 @@
+bazel-*
+MODULE.bazel.lock
+.bazelrc.user
+
+# Local investigation and consumer suites, pending individual upstream review.
+/plans/
+/e2e/

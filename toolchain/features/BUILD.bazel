@@ -1,0 +1,238 @@
+load("@rules_cc//cc/toolchains:feature.bzl", "cc_feature")
+load("@rules_cc//cc/toolchains:feature_constraint.bzl", "cc_feature_constraint")
+load("@rules_cc//cc/toolchains:feature_set.bzl", "cc_feature_set")
+
+package(default_visibility = ["//visibility:public"])
+
+cc_feature(
+    name = "dynamic_linking_mode",
+    overrides = "@rules_cc//cc/toolchains/features:dynamic_linking_mode",
+)
+
+cc_feature_constraint(
+    name = "static_linking_mode",
+    none_of = ["dynamic_linking_mode"],
+)
+
+# Keep runtime selection with Fil-C's target arguments: -static alone would
+# leave the dynamic runtime active when rules_cc selects dynamic linking mode.
+cc_feature(
+    name = "fully_static_link",
+    args = ["//toolchain/args:fully_static_shared_link_guard"],
+    overrides = "@rules_cc//cc/toolchains/features/legacy:fully_static_link",
+)
+
+cc_feature_constraint(
+    name = "dynamic_executable",
+    all_of = ["dynamic_linking_mode"],
+    none_of = ["fully_static_link"],
+)
+
+cc_feature(
+    name = "no_legacy",
+    feature_name = "no_legacy_features",
+)
+
+cc_feature(
+    name = "default_compile_flags",
+    overrides = "@rules_cc//cc/toolchains/features/legacy:default_compile_flags",
+)
+
+cc_feature(
+    name = "opt_stub",
+    overrides = "@rules_cc//cc/toolchains/features:opt",
+)
+
+cc_feature(
+    name = "opt",
+    args = [
+        "//toolchain/args:opt_compile_flags",
+        "//toolchain/args:opt_preprocess_assembly_flags",
+        "//toolchain/args:opt_link_flags",
+    ],
+    feature_name = "_filc_opt",
+    requires_any_of = ["opt_stub"],
+)
+
+cc_feature(
+    name = "dbg_stub",
+    overrides = "@rules_cc//cc/toolchains/features:dbg",
+)
+
+cc_feature(
+    name = "dbg",
+    args = [
+        "//toolchain/args:dbg_compile_flags",
+        "//toolchain/args:dbg_preprocess_assembly_flags",
+        "//toolchain/args:assembly_debug_flags",
+    ],
+    feature_name = "_filc_dbg",
+    requires_any_of = ["dbg_stub"],
+)
+
+cc_feature(
+    name = "fastbuild_stub",
+    overrides = "@rules_cc//cc/toolchains/features:fastbuild",
+)
+
+cc_feature(
+    name = "fastbuild",
+    args = [
+        "//toolchain/args:fastbuild_compile_flags",
+    ],
+    feature_name = "_filc_fastbuild",
+    requires_any_of = ["fastbuild_stub"],
+)
+
+cc_feature(
+    name = "unsupported_thin_lto",
+    args = ["//toolchain/args:unsupported_thin_lto_args"],
+    feature_name = "thin_lto",
+)
+
+cc_feature(
+    name = "unsupported_lto",
+    args = ["//toolchain/args:unsupported_lto_args"],
+    feature_name = "lto",
+)
+
+cc_feature(
+    name = "unsupported_coverage",
+    args = ["//toolchain/args:unsupported_coverage_args"],
+    overrides = "@rules_cc//cc/toolchains/features/legacy:coverage",
+)
+
+cc_feature(
+    name = "unsupported_llvm_coverage_map_format",
+    args = ["//toolchain/args:unsupported_llvm_coverage_map_format_args"],
+    overrides = "@rules_cc//cc/toolchains/features/legacy:llvm_coverage_map_format",
+)
+
+cc_feature(
+    name = "unsupported_gcc_coverage_map_format",
+    args = ["//toolchain/args:unsupported_gcc_coverage_map_format_args"],
+    overrides = "@rules_cc//cc/toolchains/features/legacy:gcc_coverage_map_format",
+)
+
+cc_feature(
+    name = "unsupported_fdo_instrument",
+    args = ["//toolchain/args:unsupported_fdo_instrument_args"],
+    overrides = "@rules_cc//cc/toolchains/features/legacy:fdo_instrument",
+)
+
+cc_feature(
+    name = "unsupported_cs_fdo_instrument",
+    args = ["//toolchain/args:unsupported_cs_fdo_instrument_args"],
+    overrides = "@rules_cc//cc/toolchains/features/legacy:cs_fdo_instrument",
+)
+
+cc_feature(
+    name = "unsupported_asan",
+    args = ["//toolchain/args:unsupported_asan_args"],
+    feature_name = "asan",
+)
+
+cc_feature(
+    name = "unsupported_ubsan",
+    args = ["//toolchain/args:unsupported_ubsan_args"],
+    feature_name = "ubsan",
+)
+
+cc_feature(
+    name = "unsupported_tsan",
+    args = ["//toolchain/args:unsupported_tsan_args"],
+    feature_name = "tsan",
+)
+
+cc_feature(
+    name = "unsupported_msan",
+    args = ["//toolchain/args:unsupported_msan_args"],
+    feature_name = "msan",
+)
+
+cc_feature(
+    name = "unsupported_lsan",
+    args = ["//toolchain/args:unsupported_lsan_args"],
+    feature_name = "lsan",
+)
+
+cc_feature(
+    name = "unsupported_dfsan",
+    args = ["//toolchain/args:unsupported_dfsan_args"],
+    feature_name = "dfsan",
+)
+
+cc_feature(
+    name = "unsupported_cfi",
+    args = ["//toolchain/args:unsupported_cfi_args"],
+    feature_name = "cfi",
+)
+
+cc_feature(
+    name = "unsupported_safestack",
+    args = ["//toolchain/args:unsupported_safestack_args"],
+    feature_name = "safestack",
+)
+
+cc_feature(
+    name = "unsupported_rtsan",
+    args = ["//toolchain/args:unsupported_rtsan_args"],
+    feature_name = "rtsan",
+)
+
+cc_feature(
+    name = "unsupported_tysan",
+    args = ["//toolchain/args:unsupported_tysan_args"],
+    feature_name = "tysan",
+)
+
+cc_feature(
+    name = "unsupported_nsan",
+    args = ["//toolchain/args:unsupported_nsan_args"],
+    feature_name = "nsan",
+)
+
+cc_feature(
+    name = "unsupported_xray",
+    args = ["//toolchain/args:unsupported_xray_args"],
+    feature_name = "xray",
+)
+
+cc_feature(
+    name = "unsupported_fuzzer",
+    args = ["//toolchain/args:unsupported_fuzzer_args"],
+    feature_name = "fuzzer",
+)
+
+cc_feature(
+    name = "unsupported_openmp",
+    args = ["//toolchain/args:unsupported_openmp_args"],
+    feature_name = "openmp",
+)
+
+cc_feature_set(
+    name = "unsupported_features",
+    all_of = [
+        "unsupported_thin_lto",
+        "unsupported_lto",
+        "unsupported_coverage",
+        "unsupported_llvm_coverage_map_format",
+        "unsupported_gcc_coverage_map_format",
+        "unsupported_fdo_instrument",
+        "unsupported_cs_fdo_instrument",
+        "unsupported_asan",
+        "unsupported_ubsan",
+        "unsupported_tsan",
+        "unsupported_msan",
+        "unsupported_lsan",
+        "unsupported_dfsan",
+        "unsupported_cfi",
+        "unsupported_safestack",
+        "unsupported_rtsan",
+        "unsupported_tysan",
+        "unsupported_nsan",
+        "unsupported_xray",
+        "unsupported_fuzzer",
+        "unsupported_openmp",
+    ],
+)

@@ -1,0 +1,6 @@
+exports_files([
+    "distribution.BUILD.bazel",
+    "glibc.BUILD.bazel",
+    "target.BUILD.bazel",
+    "toolchains.BUILD.bazel",
+])

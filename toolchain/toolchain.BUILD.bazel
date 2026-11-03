@@ -1,0 +1,32 @@
+load("@rules_cc//cc/toolchains:args_list.bzl", "cc_args_list")
+
+package(default_visibility = ["//visibility:public"])
+
+cc_args_list(
+    name = "toolchain_args",
+    args = [
+        "@toolchains_filc//toolchain/args:pie_policy",
+        "@toolchains_filc//toolchain/args:hermetic_driver_config",
+        "@toolchains_filc//toolchain/args:target_flags",
+        "{execution_args}:resource_directory",
+        # Keep external system directories before the target C/C++ headers,
+        # following the common toolchain's include precedence.
+        "@rules_cc//cc/toolchains/args/external_include_paths:external_include_paths",
+        "//toolchain/args:c_header_search_paths",
+        "@toolchains_filc//toolchain/args:assembly_target_flags",
+        "@toolchains_filc//toolchain/args:raw_assembly_flags",
+        "@toolchains_filc//toolchain/args:embed_flags",
+        "//toolchain/args:cxx_header_search_paths",
+        "@toolchains_filc//toolchain/args:deterministic_compile_flags",
+        "@toolchains_filc//toolchain/args:default_compile_flags",
+        "@toolchains_filc//toolchain/args:default_cxx_compile_flags",
+        "@toolchains_filc//toolchain/args:default_link_flags",
+        "@toolchains_filc//toolchain/args:sysroot_flags",
+        "@toolchains_filc//toolchain/args:linker",
+        "//toolchain/args:dynamic_startfiles_and_libs",
+        "//toolchain/args:shared_startfiles_and_libs",
+    ] + select({
+        "@llvm//constraints/libc:musl": ["//toolchain/args:static_startfiles_and_libs"],
+        "@llvm//constraints/libc:gnu.2.44": ["@toolchains_filc//toolchain/args:glibc_fully_static_link_guard"],
+    }),
+)

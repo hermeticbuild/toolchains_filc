@@ -1,0 +1,2 @@
+# Complete ordered composition: toolchain.BUILD.bazel, instantiated per execution CPU.
+exports_files(["toolchain.BUILD.bazel"])

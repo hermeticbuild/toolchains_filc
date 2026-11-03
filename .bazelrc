@@ -1,0 +1,6 @@
+common --incompatible_strict_action_env
+common --repo_env=BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1
+common --repo_env=BAZEL_NO_APPLE_CPP_TOOLCHAIN=1
+
+# Remote service and authentication settings are local to the developer.
+try-import %workspace%/.bazelrc.user

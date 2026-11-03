@@ -1,0 +1,614 @@
+load("@rules_cc//cc/toolchains:args.bzl", "cc_args")
+
+package(default_visibility = ["//visibility:public"])
+
+cc_args(
+    name = "glibc_fully_static_link_guard",
+    actions = ["@rules_cc//cc/toolchains/actions:cpp_link_executable"],
+    env = {"FILC_UNSUPPORTED_LINKAGE": "glibc_fully_static_link"},
+    requires_any_of = ["@toolchains_filc//toolchain/features:fully_static_link"],
+)
+
+cc_args(
+    name = "hermetic_driver_config",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:c_compile",
+        "@rules_cc//cc/toolchains/actions:cpp_compile",
+        "@rules_cc//cc/toolchains/actions:linkstamp_compile",
+        "@rules_cc//cc/toolchains/actions:assemble",
+        "@rules_cc//cc/toolchains/actions:preprocess_assemble",
+        "@rules_cc//cc/toolchains/actions:cpp_link_executable",
+        "@rules_cc//cc/toolchains/actions:cpp_link_dynamic_library",
+        "@rules_cc//cc/toolchains/actions:cpp_link_nodeps_dynamic_library",
+    ],
+    args = ["--no-default-config"],
+)
+
+cc_args(
+    name = "target_flags",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:c_compile",
+        "@rules_cc//cc/toolchains/actions:cpp_compile",
+        "@rules_cc//cc/toolchains/actions:linkstamp_compile",
+        "@rules_cc//cc/toolchains/actions:assemble",
+        "@rules_cc//cc/toolchains/actions:preprocess_assemble",
+        "@rules_cc//cc/toolchains/actions:cpp_link_executable",
+        "@rules_cc//cc/toolchains/actions:cpp_link_dynamic_library",
+        "@rules_cc//cc/toolchains/actions:cpp_link_nodeps_dynamic_library",
+    ],
+    args = select({
+        "@llvm//platforms/config:linux_x86_64_musl": ["--target=x86_64-unknown-linux-musl"],
+        "@llvm//platforms/config:linux_aarch64_musl": ["--target=aarch64-unknown-linux-musl"],
+        "@llvm//platforms/config:linux_x86_64_gnu.2.44": ["--target=x86_64-unknown-linux-gnu"],
+        "@llvm//platforms/config:linux_aarch64_gnu.2.44": ["--target=aarch64-unknown-linux-gnu"],
+    }),
+)
+
+cc_args(
+    name = "assembly_target_flags",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:assemble",
+        "@rules_cc//cc/toolchains/actions:preprocess_assemble",
+    ],
+    env = select({
+        "@llvm//platforms/config:linux_x86_64_musl": {"FILC_ASSEMBLER_TARGET": "x86_64-unknown-linux-musl"},
+        "@llvm//platforms/config:linux_aarch64_musl": {"FILC_ASSEMBLER_TARGET": "aarch64-unknown-linux-musl"},
+        "@llvm//platforms/config:linux_x86_64_gnu.2.44": {"FILC_ASSEMBLER_TARGET": "x86_64-unknown-linux-gnu"},
+        "@llvm//platforms/config:linux_aarch64_gnu.2.44": {"FILC_ASSEMBLER_TARGET": "aarch64-unknown-linux-gnu"},
+    }),
+)
+
+cc_args(
+    name = "raw_assembly_flags",
+    actions = ["@rules_cc//cc/toolchains/actions:assemble"],
+    # SaRCAsm consumes neither the standard include/PIC flags nor the seed.
+    # Keep ordinary user -Werror usable; unsupported -Wa/-Xassembler still
+    # receive the upstream explicit error, independently of this warning.
+    args = ["-Wno-unused-command-line-argument"],
+)
+
+cc_args(
+    name = "embed_flags",
+    actions = ["@rules_cc//cc/toolchains/actions:objcopy_embed_data"],
+    args = select({
+        "@platforms//cpu:x86_64": [
+            "-I",
+            "binary",
+            "-O",
+            "elf64-x86-64",
+            "-B",
+            "i386:x86-64",
+        ],
+        "@platforms//cpu:aarch64": [
+            "-I",
+            "binary",
+            "-O",
+            "elf64-littleaarch64",
+            "-B",
+            "aarch64",
+        ],
+    }),
+)
+
+cc_args(
+    name = "default_link_flags",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:cpp_link_executable",
+        "@rules_cc//cc/toolchains/actions:cpp_link_dynamic_library",
+        "@rules_cc//cc/toolchains/actions:cpp_link_nodeps_dynamic_library",
+    ],
+    args = [
+        "--driver-mode=g++",
+        "-Wl,-no-as-needed",
+        "-Wl,-z,relro,-z,now",
+    ],
+)
+
+cc_args(
+    name = "linker",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:cpp_link_executable",
+        "@rules_cc//cc/toolchains/actions:cpp_link_dynamic_library",
+        "@rules_cc//cc/toolchains/actions:cpp_link_nodeps_dynamic_library",
+    ],
+    # The execution-configured link tool supplies --ld-path and its inputs.
+    args = ["-fuse-ld=lld"],
+)
+
+cc_args(
+    name = "sysroot_flags",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:cpp_link_executable",
+        "@rules_cc//cc/toolchains/actions:cpp_link_dynamic_library",
+        "@rules_cc//cc/toolchains/actions:cpp_link_nodeps_dynamic_library",
+    ],
+    args = ["--sysroot=/dev/null"],
+)
+
+exports_files([
+    "target.BUILD.bazel",
+    "execution.BUILD.bazel",
+])
+
+cc_args(
+    name = "assembly_debug_flags",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:assemble",
+        "@rules_cc//cc/toolchains/actions:preprocess_assemble",
+    ],
+    args = ["-g"],
+)
+
+cc_args(
+    name = "opt_compile_flags",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:c_compile",
+        "@rules_cc//cc/toolchains/actions:cpp_compile",
+        "@rules_cc//cc/toolchains/actions:linkstamp_compile",
+    ],
+    args = [
+        "-g0",
+        "-O2",
+        "-D_FORTIFY_SOURCE=1",
+        "-DNDEBUG",
+        "-ffunction-sections",
+        "-fdata-sections",
+    ],
+)
+
+cc_args(
+    name = "opt_preprocess_assembly_flags",
+    actions = ["@rules_cc//cc/toolchains/actions:preprocess_assemble"],
+    # Any -g option, including -g0, enables SaRCAsm origins.
+    args = [
+        "-O2",
+        "-D_FORTIFY_SOURCE=1",
+        "-DNDEBUG",
+    ],
+)
+
+cc_args(
+    name = "dbg_compile_flags",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:c_compile",
+        "@rules_cc//cc/toolchains/actions:cpp_compile",
+        "@rules_cc//cc/toolchains/actions:linkstamp_compile",
+    ],
+    args = [
+        "-D_DEBUG",
+        "-O0",
+        "-g",
+    ],
+)
+
+cc_args(
+    name = "dbg_preprocess_assembly_flags",
+    actions = ["@rules_cc//cc/toolchains/actions:preprocess_assemble"],
+    # Any -g option, including -g0, enables SaRCAsm origins.
+    args = [
+        "-D_DEBUG",
+        "-O0",
+    ],
+)
+
+cc_args(
+    name = "fastbuild_compile_flags",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:c_compile",
+        "@rules_cc//cc/toolchains/actions:cpp_compile",
+        "@rules_cc//cc/toolchains/actions:linkstamp_compile",
+        "@rules_cc//cc/toolchains/actions:preprocess_assemble",
+    ],
+    # Match common fastbuild: O0/unset emits no optimization or debug option.
+    # In particular, never send automatic -g0 through SaRCAsm.
+    args = select({
+        "@llvm//config:fastbuild_optimization_mode_O1": ["-O1"],
+        "@llvm//config:fastbuild_optimization_mode_O2": ["-O2"],
+        "@llvm//config:fastbuild_optimization_mode_O3": ["-O3"],
+        "@llvm//config:fastbuild_optimization_mode_Og": ["-Og"],
+        "@llvm//config:fastbuild_optimization_mode_Os": ["-Os"],
+        "@llvm//config:fastbuild_optimization_mode_Oz": ["-Oz"],
+        "//conditions:default": [],
+    }),
+)
+
+cc_args(
+    name = "unsupported_thin_lto_args",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:c_compile",
+        "@rules_cc//cc/toolchains/actions:cpp_compile",
+        "@rules_cc//cc/toolchains/actions:linkstamp_compile",
+        "@rules_cc//cc/toolchains/actions:assemble",
+        "@rules_cc//cc/toolchains/actions:preprocess_assemble",
+        "@rules_cc//cc/toolchains/actions:cpp_link_executable",
+        "@rules_cc//cc/toolchains/actions:cpp_link_dynamic_library",
+        "@rules_cc//cc/toolchains/actions:cpp_link_nodeps_dynamic_library",
+    ],
+    args = ["--filc-unsupported-feature=thin_lto"],
+)
+
+cc_args(
+    name = "unsupported_lto_args",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:c_compile",
+        "@rules_cc//cc/toolchains/actions:cpp_compile",
+        "@rules_cc//cc/toolchains/actions:linkstamp_compile",
+        "@rules_cc//cc/toolchains/actions:assemble",
+        "@rules_cc//cc/toolchains/actions:preprocess_assemble",
+        "@rules_cc//cc/toolchains/actions:cpp_link_executable",
+        "@rules_cc//cc/toolchains/actions:cpp_link_dynamic_library",
+        "@rules_cc//cc/toolchains/actions:cpp_link_nodeps_dynamic_library",
+    ],
+    args = ["--filc-unsupported-feature=lto"],
+)
+
+cc_args(
+    name = "unsupported_coverage_args",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:c_compile",
+        "@rules_cc//cc/toolchains/actions:cpp_compile",
+        "@rules_cc//cc/toolchains/actions:linkstamp_compile",
+        "@rules_cc//cc/toolchains/actions:assemble",
+        "@rules_cc//cc/toolchains/actions:preprocess_assemble",
+        "@rules_cc//cc/toolchains/actions:cpp_link_executable",
+        "@rules_cc//cc/toolchains/actions:cpp_link_dynamic_library",
+        "@rules_cc//cc/toolchains/actions:cpp_link_nodeps_dynamic_library",
+    ],
+    args = ["--filc-unsupported-feature=coverage"],
+)
+
+cc_args(
+    name = "unsupported_llvm_coverage_map_format_args",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:c_compile",
+        "@rules_cc//cc/toolchains/actions:cpp_compile",
+        "@rules_cc//cc/toolchains/actions:linkstamp_compile",
+        "@rules_cc//cc/toolchains/actions:assemble",
+        "@rules_cc//cc/toolchains/actions:preprocess_assemble",
+        "@rules_cc//cc/toolchains/actions:cpp_link_executable",
+        "@rules_cc//cc/toolchains/actions:cpp_link_dynamic_library",
+        "@rules_cc//cc/toolchains/actions:cpp_link_nodeps_dynamic_library",
+    ],
+    args = ["--filc-unsupported-feature=llvm_coverage_map_format"],
+)
+
+cc_args(
+    name = "unsupported_gcc_coverage_map_format_args",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:c_compile",
+        "@rules_cc//cc/toolchains/actions:cpp_compile",
+        "@rules_cc//cc/toolchains/actions:linkstamp_compile",
+        "@rules_cc//cc/toolchains/actions:assemble",
+        "@rules_cc//cc/toolchains/actions:preprocess_assemble",
+        "@rules_cc//cc/toolchains/actions:cpp_link_executable",
+        "@rules_cc//cc/toolchains/actions:cpp_link_dynamic_library",
+        "@rules_cc//cc/toolchains/actions:cpp_link_nodeps_dynamic_library",
+    ],
+    args = ["--filc-unsupported-feature=gcc_coverage_map_format"],
+)
+
+cc_args(
+    name = "unsupported_fdo_instrument_args",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:c_compile",
+        "@rules_cc//cc/toolchains/actions:cpp_compile",
+        "@rules_cc//cc/toolchains/actions:linkstamp_compile",
+        "@rules_cc//cc/toolchains/actions:assemble",
+        "@rules_cc//cc/toolchains/actions:preprocess_assemble",
+        "@rules_cc//cc/toolchains/actions:cpp_link_executable",
+        "@rules_cc//cc/toolchains/actions:cpp_link_dynamic_library",
+        "@rules_cc//cc/toolchains/actions:cpp_link_nodeps_dynamic_library",
+    ],
+    args = ["--filc-unsupported-feature=fdo_instrument"],
+)
+
+cc_args(
+    name = "unsupported_cs_fdo_instrument_args",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:c_compile",
+        "@rules_cc//cc/toolchains/actions:cpp_compile",
+        "@rules_cc//cc/toolchains/actions:linkstamp_compile",
+        "@rules_cc//cc/toolchains/actions:assemble",
+        "@rules_cc//cc/toolchains/actions:preprocess_assemble",
+        "@rules_cc//cc/toolchains/actions:cpp_link_executable",
+        "@rules_cc//cc/toolchains/actions:cpp_link_dynamic_library",
+        "@rules_cc//cc/toolchains/actions:cpp_link_nodeps_dynamic_library",
+    ],
+    args = ["--filc-unsupported-feature=cs_fdo_instrument"],
+)
+
+cc_args(
+    name = "unsupported_asan_args",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:c_compile",
+        "@rules_cc//cc/toolchains/actions:cpp_compile",
+        "@rules_cc//cc/toolchains/actions:linkstamp_compile",
+        "@rules_cc//cc/toolchains/actions:assemble",
+        "@rules_cc//cc/toolchains/actions:preprocess_assemble",
+        "@rules_cc//cc/toolchains/actions:cpp_link_executable",
+        "@rules_cc//cc/toolchains/actions:cpp_link_dynamic_library",
+        "@rules_cc//cc/toolchains/actions:cpp_link_nodeps_dynamic_library",
+    ],
+    args = ["--filc-unsupported-feature=asan"],
+)
+
+cc_args(
+    name = "unsupported_ubsan_args",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:c_compile",
+        "@rules_cc//cc/toolchains/actions:cpp_compile",
+        "@rules_cc//cc/toolchains/actions:linkstamp_compile",
+        "@rules_cc//cc/toolchains/actions:assemble",
+        "@rules_cc//cc/toolchains/actions:preprocess_assemble",
+        "@rules_cc//cc/toolchains/actions:cpp_link_executable",
+        "@rules_cc//cc/toolchains/actions:cpp_link_dynamic_library",
+        "@rules_cc//cc/toolchains/actions:cpp_link_nodeps_dynamic_library",
+    ],
+    args = ["--filc-unsupported-feature=ubsan"],
+)
+
+cc_args(
+    name = "unsupported_tsan_args",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:c_compile",
+        "@rules_cc//cc/toolchains/actions:cpp_compile",
+        "@rules_cc//cc/toolchains/actions:linkstamp_compile",
+        "@rules_cc//cc/toolchains/actions:assemble",
+        "@rules_cc//cc/toolchains/actions:preprocess_assemble",
+        "@rules_cc//cc/toolchains/actions:cpp_link_executable",
+        "@rules_cc//cc/toolchains/actions:cpp_link_dynamic_library",
+        "@rules_cc//cc/toolchains/actions:cpp_link_nodeps_dynamic_library",
+    ],
+    args = ["--filc-unsupported-feature=tsan"],
+)
+
+cc_args(
+    name = "unsupported_msan_args",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:c_compile",
+        "@rules_cc//cc/toolchains/actions:cpp_compile",
+        "@rules_cc//cc/toolchains/actions:linkstamp_compile",
+        "@rules_cc//cc/toolchains/actions:assemble",
+        "@rules_cc//cc/toolchains/actions:preprocess_assemble",
+        "@rules_cc//cc/toolchains/actions:cpp_link_executable",
+        "@rules_cc//cc/toolchains/actions:cpp_link_dynamic_library",
+        "@rules_cc//cc/toolchains/actions:cpp_link_nodeps_dynamic_library",
+    ],
+    args = ["--filc-unsupported-feature=msan"],
+)
+
+cc_args(
+    name = "unsupported_lsan_args",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:c_compile",
+        "@rules_cc//cc/toolchains/actions:cpp_compile",
+        "@rules_cc//cc/toolchains/actions:linkstamp_compile",
+        "@rules_cc//cc/toolchains/actions:assemble",
+        "@rules_cc//cc/toolchains/actions:preprocess_assemble",
+        "@rules_cc//cc/toolchains/actions:cpp_link_executable",
+        "@rules_cc//cc/toolchains/actions:cpp_link_dynamic_library",
+        "@rules_cc//cc/toolchains/actions:cpp_link_nodeps_dynamic_library",
+    ],
+    args = ["--filc-unsupported-feature=lsan"],
+)
+
+cc_args(
+    name = "unsupported_dfsan_args",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:c_compile",
+        "@rules_cc//cc/toolchains/actions:cpp_compile",
+        "@rules_cc//cc/toolchains/actions:linkstamp_compile",
+        "@rules_cc//cc/toolchains/actions:assemble",
+        "@rules_cc//cc/toolchains/actions:preprocess_assemble",
+        "@rules_cc//cc/toolchains/actions:cpp_link_executable",
+        "@rules_cc//cc/toolchains/actions:cpp_link_dynamic_library",
+        "@rules_cc//cc/toolchains/actions:cpp_link_nodeps_dynamic_library",
+    ],
+    args = ["--filc-unsupported-feature=dfsan"],
+)
+
+cc_args(
+    name = "unsupported_cfi_args",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:c_compile",
+        "@rules_cc//cc/toolchains/actions:cpp_compile",
+        "@rules_cc//cc/toolchains/actions:linkstamp_compile",
+        "@rules_cc//cc/toolchains/actions:assemble",
+        "@rules_cc//cc/toolchains/actions:preprocess_assemble",
+        "@rules_cc//cc/toolchains/actions:cpp_link_executable",
+        "@rules_cc//cc/toolchains/actions:cpp_link_dynamic_library",
+        "@rules_cc//cc/toolchains/actions:cpp_link_nodeps_dynamic_library",
+    ],
+    args = ["--filc-unsupported-feature=cfi"],
+)
+
+cc_args(
+    name = "unsupported_safestack_args",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:c_compile",
+        "@rules_cc//cc/toolchains/actions:cpp_compile",
+        "@rules_cc//cc/toolchains/actions:linkstamp_compile",
+        "@rules_cc//cc/toolchains/actions:assemble",
+        "@rules_cc//cc/toolchains/actions:preprocess_assemble",
+        "@rules_cc//cc/toolchains/actions:cpp_link_executable",
+        "@rules_cc//cc/toolchains/actions:cpp_link_dynamic_library",
+        "@rules_cc//cc/toolchains/actions:cpp_link_nodeps_dynamic_library",
+    ],
+    args = ["--filc-unsupported-feature=safestack"],
+)
+
+cc_args(
+    name = "unsupported_rtsan_args",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:c_compile",
+        "@rules_cc//cc/toolchains/actions:cpp_compile",
+        "@rules_cc//cc/toolchains/actions:linkstamp_compile",
+        "@rules_cc//cc/toolchains/actions:assemble",
+        "@rules_cc//cc/toolchains/actions:preprocess_assemble",
+        "@rules_cc//cc/toolchains/actions:cpp_link_executable",
+        "@rules_cc//cc/toolchains/actions:cpp_link_dynamic_library",
+        "@rules_cc//cc/toolchains/actions:cpp_link_nodeps_dynamic_library",
+    ],
+    args = ["--filc-unsupported-feature=rtsan"],
+)
+
+cc_args(
+    name = "unsupported_tysan_args",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:c_compile",
+        "@rules_cc//cc/toolchains/actions:cpp_compile",
+        "@rules_cc//cc/toolchains/actions:linkstamp_compile",
+        "@rules_cc//cc/toolchains/actions:assemble",
+        "@rules_cc//cc/toolchains/actions:preprocess_assemble",
+        "@rules_cc//cc/toolchains/actions:cpp_link_executable",
+        "@rules_cc//cc/toolchains/actions:cpp_link_dynamic_library",
+        "@rules_cc//cc/toolchains/actions:cpp_link_nodeps_dynamic_library",
+    ],
+    args = ["--filc-unsupported-feature=tysan"],
+)
+
+cc_args(
+    name = "unsupported_nsan_args",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:c_compile",
+        "@rules_cc//cc/toolchains/actions:cpp_compile",
+        "@rules_cc//cc/toolchains/actions:linkstamp_compile",
+        "@rules_cc//cc/toolchains/actions:assemble",
+        "@rules_cc//cc/toolchains/actions:preprocess_assemble",
+        "@rules_cc//cc/toolchains/actions:cpp_link_executable",
+        "@rules_cc//cc/toolchains/actions:cpp_link_dynamic_library",
+        "@rules_cc//cc/toolchains/actions:cpp_link_nodeps_dynamic_library",
+    ],
+    args = ["--filc-unsupported-feature=nsan"],
+)
+
+cc_args(
+    name = "unsupported_xray_args",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:c_compile",
+        "@rules_cc//cc/toolchains/actions:cpp_compile",
+        "@rules_cc//cc/toolchains/actions:linkstamp_compile",
+        "@rules_cc//cc/toolchains/actions:assemble",
+        "@rules_cc//cc/toolchains/actions:preprocess_assemble",
+        "@rules_cc//cc/toolchains/actions:cpp_link_executable",
+        "@rules_cc//cc/toolchains/actions:cpp_link_dynamic_library",
+        "@rules_cc//cc/toolchains/actions:cpp_link_nodeps_dynamic_library",
+    ],
+    args = ["--filc-unsupported-feature=xray"],
+)
+
+cc_args(
+    name = "unsupported_fuzzer_args",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:c_compile",
+        "@rules_cc//cc/toolchains/actions:cpp_compile",
+        "@rules_cc//cc/toolchains/actions:linkstamp_compile",
+        "@rules_cc//cc/toolchains/actions:assemble",
+        "@rules_cc//cc/toolchains/actions:preprocess_assemble",
+        "@rules_cc//cc/toolchains/actions:cpp_link_executable",
+        "@rules_cc//cc/toolchains/actions:cpp_link_dynamic_library",
+        "@rules_cc//cc/toolchains/actions:cpp_link_nodeps_dynamic_library",
+    ],
+    args = ["--filc-unsupported-feature=fuzzer"],
+)
+
+cc_args(
+    name = "unsupported_openmp_args",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:c_compile",
+        "@rules_cc//cc/toolchains/actions:cpp_compile",
+        "@rules_cc//cc/toolchains/actions:linkstamp_compile",
+        "@rules_cc//cc/toolchains/actions:assemble",
+        "@rules_cc//cc/toolchains/actions:preprocess_assemble",
+        "@rules_cc//cc/toolchains/actions:cpp_link_executable",
+        "@rules_cc//cc/toolchains/actions:cpp_link_dynamic_library",
+        "@rules_cc//cc/toolchains/actions:cpp_link_nodeps_dynamic_library",
+    ],
+    args = ["--filc-unsupported-feature=openmp"],
+)
+
+# These source defaults follow the common GNU-driver policy. SaRCAsm has a
+# separate assembly protocol; native-code frame/stack/section options do not
+# describe its generated code and must not be inferred from these C/C++ flags.
+cc_args(
+    name = "default_compile_flags",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:c_compile",
+        "@rules_cc//cc/toolchains/actions:cpp_compile",
+        "@rules_cc//cc/toolchains/actions:linkstamp_compile",
+    ],
+    args = [
+        "-fstack-protector",
+        "-Wall",
+        "-Wthread-safety",
+        "-Wself-assign",
+        "-Wunused-but-set-parameter",
+        "-Wno-free-nonheap-object",
+        "-fcolor-diagnostics",
+        "-fno-omit-frame-pointer",
+    ],
+    requires_any_of = ["//toolchain/features:default_compile_flags"],
+)
+
+cc_args(
+    name = "default_cxx_compile_flags",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:cpp_compile",
+        "@rules_cc//cc/toolchains/actions:linkstamp_compile",
+    ],
+    args = ["-std=c++17"],
+    requires_any_of = ["//toolchain/features:default_compile_flags"],
+)
+
+cc_args(
+    name = "deterministic_compile_flags",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:c_compile",
+        "@rules_cc//cc/toolchains/actions:cpp_compile",
+        "@rules_cc//cc/toolchains/actions:linkstamp_compile",
+        "@rules_cc//cc/toolchains/actions:preprocess_assemble",
+    ],
+    args = [
+        "-Wno-builtin-macro-redefined",
+        "-D__DATE__=\"redacted\"",
+        "-D__TIMESTAMP__=\"redacted\"",
+        "-D__TIME__=\"redacted\"",
+        "-ffile-compilation-dir=.",
+    ],
+)
+
+cc_args(
+    name = "opt_link_flags",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:cpp_link_executable",
+        "@rules_cc//cc/toolchains/actions:cpp_link_dynamic_library",
+        "@rules_cc//cc/toolchains/actions:cpp_link_nodeps_dynamic_library",
+    ],
+    args = [
+        "-Wl,--gc-sections",
+        "-Wl,--icf=safe",
+    ],
+)
+
+cc_args(
+    name = "pie_policy",
+    # PIE constrains executable linkage, not object or shared-library creation.
+    actions = ["@rules_cc//cc/toolchains/actions:cpp_link_executable"],
+    env = select({
+        "@llvm//constraints/pie:off": {"FILC_UNSUPPORTED_PIE": "off"},
+        "//conditions:default": {},
+    }),
+)
+
+cc_args(
+    name = "fully_static_shared_link_guard",
+    # Fil-C converts -static to static PIE even alongside -shared, combining
+    # incompatible executable/DSO modes. Ordinary DSOs may still contain .a
+    # dependencies; only the fully_static_link request on this action is invalid.
+    # https://github.com/pizlonator/fil-c/blob/e7947f079c976fb167108f7407c20240bca0ca89/clang/lib/Driver/ToolChains/Gnu.cpp#L346-L359
+    actions = [
+        "@rules_cc//cc/toolchains/actions:cpp_link_dynamic_library",
+        "@rules_cc//cc/toolchains/actions:cpp_link_nodeps_dynamic_library",
+    ],
+    env = {"FILC_UNSUPPORTED_LINKAGE": "fully_static_shared_link"},
+)

@@ -1,0 +1,160 @@
+load("@bazel_skylib//rules/directory:directory.bzl", "directory")
+load("@bazel_skylib//rules/directory:subdirectory.bzl", "subdirectory")
+
+package(default_visibility = ["//visibility:public"])
+
+# Optfil mixes libc, stdfil, C++, UAPI and userland headers. Preserve this
+# complete tree, including its bundled UAPI. Kernel version selection through
+# the shared kernel extension applies only to the Pizfix musl stack.
+directory(
+    name = "headers_files",
+    srcs = glob(["fil/include/**"]),
+    target_compatible_with = [
+        "@llvm//constraints/libc:gnu.2.44",
+        "@toolchains_filc//:abi",
+        "@platforms//cpu:{arch}",
+        "@platforms//os:linux",
+    ],
+)
+
+subdirectory(
+    name = "headers",
+    parent = "headers_files",
+    path = "fil/include",
+)
+
+directory(
+    name = "runtime_files",
+    # Complete shipped glibc/C++/Fil-C CRT and link set. Do not stage Optfil's
+    # unrelated userland libraries. C++ SONAME aliases suffice without their
+    # duplicate .so.1.0 names. Some compatibility archives are intentionally
+    # empty; their presence does not make fully static linking possible.
+    srcs = [
+        "fil/lib/Mcrt1.o",
+        "fil/lib/Scrt1.o",
+        "fil/lib/crt1.o",
+        "fil/lib/crtbegin.o",
+        "fil/lib/crtend.o",
+        "fil/lib/crti.o",
+        "fil/lib/crtn.o",
+        "fil/lib/filc_crt.o",
+        "fil/lib/filc_mincrt.o",
+        "fil/lib/gcrt1.o",
+        "fil/lib/grcrt1.o",
+        "fil/lib/ld-fil1-{arch}.so",
+        "fil/lib/libBrokenLocale.a",
+        "fil/lib/libBrokenLocale.so",
+        "fil/lib/libBrokenLocale.so.6661",
+        "fil/lib/libanl.a",
+        "fil/lib/libanl.so",
+        "fil/lib/libanl.so.6661",
+        "fil/lib/libc++.a",
+        "fil/lib/libc++.so",
+        "fil/lib/libc++.so.1",
+        "fil/lib/libc++abi.a",
+        "fil/lib/libc++abi.so",
+        "fil/lib/libc++abi.so.1",
+        "fil/lib/libc++experimental.a",
+        "fil/lib/libc.a",
+        "fil/lib/libc.so",
+        "fil/lib/libc.so.6666",
+        "fil/lib/libc_nonshared.a",
+        "fil/lib/libdl.a",
+        "fil/lib/libdl.so.6662",
+        "fil/lib/libg.a",
+        "fil/lib/libm.a",
+        "fil/lib/libm.so",
+        "fil/lib/libm.so.6666",
+        "fil/lib/libmcheck.a",
+        "fil/lib/libnsl.so.6661",
+        "fil/lib/libnss_compat.so",
+        "fil/lib/libnss_compat.so.6662",
+        "fil/lib/libnss_db.so",
+        "fil/lib/libnss_db.so.6662",
+        "fil/lib/libnss_dns.so.6662",
+        "fil/lib/libnss_files.so.6662",
+        "fil/lib/libnss_hesiod.so",
+        "fil/lib/libnss_hesiod.so.6662",
+        "fil/lib/libpcprofile.so",
+        "fil/lib/libpizlo.so",
+        "fil/lib/libpthread.a",
+        "fil/lib/libpthread.so.6660",
+        "fil/lib/libresolv.a",
+        "fil/lib/libresolv.so",
+        "fil/lib/libresolv.so.6662",
+        "fil/lib/librt.a",
+        "fil/lib/librt.so.6661",
+        "fil/lib/libthread_db.so",
+        "fil/lib/libthread_db.so.1",
+        "fil/lib/libutil.a",
+        "fil/lib/libutil.so.6661",
+        "fil/lib/libyoloc.so",
+        "fil/lib/libyoloc_nonshared.a",
+        "fil/lib/libyolocimpl.so",
+        "fil/lib/libyolom.so",
+        "fil/lib/libyolomimpl.so",
+        "fil/lib/libyolort.a",
+        "fil/lib/libyolounwind.a",
+        "fil/lib/rcrt1.o",
+    ],
+    target_compatible_with = [
+        "@llvm//constraints/libc:gnu.2.44",
+        "@toolchains_filc//:abi",
+        "@platforms//cpu:{arch}",
+        "@platforms//os:linux",
+    ],
+)
+
+subdirectory(
+    name = "runtime",
+    parent = "runtime_files",
+    path = "fil/lib",
+)
+
+# Deployment contains ELF names only: include the optional glibc resolver,
+# compatibility and NSS libraries, but no linker scripts, CRTs or archives.
+filegroup(
+    name = "runtime_dsos",
+    srcs = [
+        "fil/lib/ld-fil1-{arch}.so",
+        "fil/lib/libBrokenLocale.so.6661",
+        "fil/lib/libanl.so.6661",
+        "fil/lib/libc++.so.1",
+        "fil/lib/libc++abi.so.1",
+        "fil/lib/libc.so.6666",
+        "fil/lib/libdl.so.6662",
+        "fil/lib/libm.so.6666",
+        "fil/lib/libnsl.so.6661",
+        "fil/lib/libnss_compat.so.6662",
+        "fil/lib/libnss_db.so.6662",
+        "fil/lib/libnss_dns.so.6662",
+        "fil/lib/libnss_files.so.6662",
+        "fil/lib/libnss_hesiod.so.6662",
+        "fil/lib/libpcprofile.so",
+        "fil/lib/libpizlo.so",
+        "fil/lib/libpthread.so.6660",
+        "fil/lib/libresolv.so.6662",
+        "fil/lib/librt.so.6661",
+        "fil/lib/libthread_db.so.1",
+        "fil/lib/libutil.so.6661",
+        "fil/lib/libyolocimpl.so",
+        "fil/lib/libyolomimpl.so",
+    ],
+    target_compatible_with = [
+        "@llvm//constraints/libc:gnu.2.44",
+        "@toolchains_filc//:abi",
+        "@platforms//cpu:{arch}",
+        "@platforms//os:linux",
+    ],
+)
+
+filegroup(
+    name = "dynamic_loader",
+    srcs = ["fil/lib/ld-fil1-{arch}.so"],
+    target_compatible_with = [
+        "@llvm//constraints/libc:gnu.2.44",
+        "@toolchains_filc//:abi",
+        "@platforms//cpu:{arch}",
+        "@platforms//os:linux",
+    ],
+)

@@ -1,0 +1,245 @@
+load("@bazel_skylib//rules/directory:directory.bzl", "directory")
+load("@bazel_skylib//rules/directory:subdirectory.bzl", "subdirectory")
+load("@rules_cc//cc/toolchains:tool.bzl", "cc_tool")
+
+package(default_visibility = ["//visibility:public"])
+
+exports_files([
+    "build/bin/clang",
+    "pizfix/bin/sarcasm",
+])
+
+filegroup(
+    name = "compiler",
+    srcs = ["build/bin/clang"],
+)
+
+directory(
+    name = "builtin_resources_files",
+    srcs = glob([
+        "build/lib/clang/20/**",
+    ]),
+)
+
+subdirectory(
+    name = "builtin_resources",
+    parent = "builtin_resources_files",
+    path = "build/lib/clang/20",
+)
+
+directory(
+    name = "helper_resources_files",
+    # Execution ELF closure required by sarcasm.sh.tpl. Keep the loader and
+    # SONAME aliases; linker-only names and duplicate .so.1.0 paths are unused.
+    srcs = [
+        "pizfix/bin/minilute",
+        "pizfix/bin/sarcasm",
+        "pizfix/bin/sarcasm.luau",
+        "pizfix/bin/unsupported-as",
+        "pizfix/lib/ld-fil1-{arch}.so",
+        "pizfix/lib/libc++.so.1",
+        "pizfix/lib/libc++abi.so.1",
+        "pizfix/lib/libc.so",
+        "pizfix/lib/libpizlo.so",
+        "pizfix/lib/libyoloc.so",
+    ] + glob([
+        "pizfix/lib/sarcasm/**",
+    ]),
+)
+
+subdirectory(
+    name = "helper_resources",
+    parent = "helper_resources_files",
+    path = "pizfix",
+)
+
+# Application bundles require the matching target ABI/libc/CPU. Keep the
+# execution compiler and helper resources above independent of target libc.
+# Subdirectory views inherit their parent directory's incompatibility.
+directory(
+    name = "c_headers_files",
+    target_compatible_with = [
+        "@llvm//constraints/libc:musl",
+        "@toolchains_filc//:abi",
+        "@platforms//cpu:{arch}",
+        "@platforms//os:linux",
+    ],
+    srcs = glob([
+        "pizfix/include/**",
+    ]),
+)
+
+subdirectory(
+    name = "c_headers",
+    parent = "c_headers_files",
+    path = "pizfix/include",
+)
+
+directory(
+    name = "stdfil_headers_files",
+    target_compatible_with = [
+        "@llvm//constraints/libc:musl",
+        "@toolchains_filc//:abi",
+        "@platforms//cpu:{arch}",
+        "@platforms//os:linux",
+    ],
+    srcs = glob([
+        "pizfix/stdfil-include/**",
+    ]),
+)
+
+subdirectory(
+    name = "stdfil_headers",
+    parent = "stdfil_headers_files",
+    path = "pizfix/stdfil-include",
+)
+
+directory(
+    name = "cxx_headers_files",
+    target_compatible_with = [
+        "@llvm//constraints/libc:musl",
+        "@toolchains_filc//:abi",
+        "@platforms//cpu:{arch}",
+        "@platforms//os:linux",
+    ],
+    srcs = glob([
+        "build/include/c++/v1/**",
+    ]),
+)
+
+subdirectory(
+    name = "cxx_headers",
+    parent = "cxx_headers_files",
+    path = "build/include/c++/v1",
+)
+
+directory(
+    name = "cxx_config_headers_files",
+    target_compatible_with = [
+        "@llvm//constraints/libc:musl",
+        "@toolchains_filc//:abi",
+        "@platforms//cpu:{arch}",
+        "@platforms//os:linux",
+    ],
+    srcs = glob([
+        "build/include/{arch}-unknown-linux-gnu/c++/v1/**",
+    ]),
+)
+
+subdirectory(
+    name = "cxx_config_headers",
+    parent = "cxx_config_headers_files",
+    path = "build/include/{arch}-unknown-linux-gnu/c++/v1",
+)
+
+directory(
+    name = "runtime_files",
+    target_compatible_with = [
+        "@llvm//constraints/libc:musl",
+        "@toolchains_filc//:abi",
+        "@platforms//cpu:{arch}",
+        "@platforms//os:linux",
+    ],
+    # Complete Fil-C 0.687 CRT/archive set, including musl compatibility and
+    # optional C++ archives. Availability does not imply driver-mode support.
+    srcs = [
+        "pizfix/lib/Scrt1.o",
+        "pizfix/lib/crt1.o",
+        "pizfix/lib/crtbegin.o",
+        "pizfix/lib/crtend.o",
+        "pizfix/lib/crti.o",
+        "pizfix/lib/crtn.o",
+        "pizfix/lib/filc_crt.o",
+        "pizfix/lib/filc_mincrt.o",
+        "pizfix/lib/libc++.a",
+        "pizfix/lib/libc++abi.a",
+        "pizfix/lib/libc++experimental.a",
+        "pizfix/lib/libc.a",
+        "pizfix/lib/libcrypt.a",
+        "pizfix/lib/libdl.a",
+        "pizfix/lib/libm.a",
+        "pizfix/lib/libpizlo.a",
+        "pizfix/lib/libpthread.a",
+        "pizfix/lib/libresolv.a",
+        "pizfix/lib/librt.a",
+        "pizfix/lib/libutil.a",
+        "pizfix/lib/libxnet.a",
+        "pizfix/lib/libyoloc.a",
+        "pizfix/lib/libyolom.a",
+        "pizfix/lib/libyolort.a",
+        "pizfix/lib/libyolounwind.a",
+        "pizfix/lib/rcrt1.o",
+    ],
+)
+
+subdirectory(
+    name = "runtime",
+    parent = "runtime_files",
+    path = "pizfix/lib",
+)
+
+# Required aliases must fail when absent, never silently fall back to archives.
+# Bazel materializes source aliases as file inputs, so the SONAME/link names
+# below do not need duplicate libc++/libc++abi .so.1.0 action paths.
+directory(
+    name = "dynamic_runtime_files",
+    target_compatible_with = [
+        "@llvm//constraints/libc:musl",
+        "@toolchains_filc//:abi",
+        "@platforms//cpu:{arch}",
+        "@platforms//os:linux",
+    ],
+    srcs = [
+        "runtime_files",
+        "pizfix/lib/ld-fil1-{arch}.so",
+        "pizfix/lib/libc.so",
+        "pizfix/lib/libc++.so",
+        "pizfix/lib/libc++.so.1",
+        "pizfix/lib/libc++abi.so",
+        "pizfix/lib/libc++abi.so.1",
+        "pizfix/lib/libpizlo.so",
+        "pizfix/lib/libyoloc.so",
+    ],
+)
+
+subdirectory(
+    name = "dynamic_runtime",
+    parent = "dynamic_runtime_files",
+    path = "pizfix/lib",
+)
+
+cc_tool(
+    name = "helper_tool",
+    src = "pizfix/bin/sarcasm",
+    data = ["helper_resources"],
+)
+
+# libc++.so is a linker script; deployment needs only the ELF aliases.
+filegroup(
+    name = "runtime_dsos",
+    target_compatible_with = [
+        "@llvm//constraints/libc:musl",
+        "@toolchains_filc//:abi",
+        "@platforms//cpu:{arch}",
+        "@platforms//os:linux",
+    ],
+    srcs = [
+        "pizfix/lib/ld-fil1-{arch}.so",
+        "pizfix/lib/libc.so",
+        "pizfix/lib/libc++.so.1",
+        "pizfix/lib/libc++abi.so.1",
+        "pizfix/lib/libpizlo.so",
+        "pizfix/lib/libyoloc.so",
+    ],
+)
+
+filegroup(
+    name = "dynamic_loader",
+    target_compatible_with = [
+        "@llvm//constraints/libc:musl",
+        "@toolchains_filc//:abi",
+        "@platforms//cpu:{arch}",
+        "@platforms//os:linux",
+    ],
+    srcs = ["pizfix/lib/ld-fil1-{arch}.so"],
+)

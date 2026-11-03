@@ -1,0 +1,133 @@
+load("@bazel_skylib//lib:selects.bzl", "selects")
+load("@rules_cc//cc/toolchains:actions.bzl", "cc_action_type")
+
+package(default_visibility = ["//visibility:public"])
+
+exports_files([
+    "guard.sh",
+    "assemble.sh",
+    "check_bundle.sh",
+    "linker.sh",
+    "linker_args.awk",
+    "unsupported.sh",
+    "sarcasm.sh.tpl",
+])
+
+cc_action_type(
+    name = "helper_probe_action",
+    action_name = "filc-helper-probe",
+)
+
+constraint_setting(name = "application_abi")
+
+selects.config_setting_group(
+    name = "supported_libc",
+    match_any = [
+        "@llvm//platforms/config:musl",
+        "glibc_2_44",
+    ],
+)
+
+config_setting(
+    name = "glibc_2_44",
+    constraint_values = ["@llvm//constraints/libc:gnu.2.44"],
+)
+
+platform(
+    name = "linux_x86_64_gnu.2.44",
+    constraint_values = [
+        "@llvm//constraints/libc:gnu.2.44",
+        "@platforms//os:linux",
+        "@platforms//cpu:x86_64",
+        "abi",
+    ],
+)
+
+platform(
+    name = "linux_aarch64_gnu.2.44",
+    constraint_values = [
+        "@llvm//constraints/libc:gnu.2.44",
+        "@platforms//os:linux",
+        "@platforms//cpu:aarch64",
+        "abi",
+    ],
+)
+
+cc_action_type(
+    name = "inspect_action",
+    action_name = "filc-inspect",
+)
+
+platform(
+    name = "linux_aarch64",
+    constraint_values = [
+        "@llvm//constraints/libc:musl",
+        "@platforms//os:linux",
+        "@platforms//cpu:aarch64",
+        "abi",
+    ],
+)
+
+platform(
+    name = "linux_aarch64_worker",
+    constraint_values = [
+        "@platforms//os:linux",
+        "@platforms//cpu:aarch64",
+        "worker",
+    ],
+    exec_properties = {
+        "container-image": "docker://ubuntu@sha256:a8fb2ba88181746111cbbe2969826d6546b71226785b196c93d2c3445a25000d",
+        "Arch": "arm64",
+        "OSFamily": "Linux",
+    },
+)
+
+constraint_value(
+    name = "abi",
+    constraint_setting = "application_abi",
+)
+
+constraint_setting(name = "execution_environment")
+
+constraint_value(
+    name = "worker",
+    constraint_setting = "execution_environment",
+)
+
+platform(
+    name = "linux_x86_64",
+    constraint_values = [
+        "@llvm//constraints/libc:musl",
+        "@platforms//os:linux",
+        "@platforms//cpu:x86_64",
+        "abi",
+    ],
+)
+
+platform(
+    name = "linux_x86_64_worker",
+    constraint_values = [
+        "@platforms//os:linux",
+        "@platforms//cpu:x86_64",
+        "worker",
+    ],
+    exec_properties = {
+        "container-image": "docker://ubuntu@sha256:8a2321a92b438238f93b4346fff61bc4259c99fdd4d9b52ee86f153fee0c344f",
+        "Arch": "amd64",
+        "OSFamily": "Linux",
+    },
+)
+
+toolchain_type(name = "runtime_toolchain_type")
+
+filegroup(
+    name = "linker_adapter",
+    srcs = ["linker.sh"],
+)
+
+filegroup(
+    name = "linker_rewrite",
+    srcs = ["linker_args.awk"],
+)
+
+toolchain_type(name = "test_toolchain_type")
