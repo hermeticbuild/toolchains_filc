@@ -20,8 +20,16 @@ def _filc_impl(mctx):
         if module.is_root and module.name == "toolchains_filc":
             # This module owns the distribution mappings used by its BUILD
             # files; consumers only need the registration repository.
-            return mctx.extension_metadata(root_module_direct_deps = "all", root_module_direct_dev_deps = [])
-    return mctx.extension_metadata(root_module_direct_deps = ["filc_toolchains"], root_module_direct_dev_deps = [])
+            return mctx.extension_metadata(
+                root_module_direct_deps = "all",
+                root_module_direct_dev_deps = [],
+                reproducible = True,
+            )
+    return mctx.extension_metadata(
+        root_module_direct_deps = ["filc_toolchains"],
+        root_module_direct_dev_deps = [],
+        reproducible = True,
+    )
 
 filc = module_extension(
     implementation = _filc_impl,
