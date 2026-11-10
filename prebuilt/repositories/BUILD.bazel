@@ -1,1 +1,12 @@
 # Repository rules are loaded only by //extensions:filc.bzl.
+
+filegroup(
+    name = "extension_sources",
+    testonly = True,
+    srcs = [
+        "filc_distribution.bzl",
+        "filc_toolchains.bzl",
+        "optfil_distribution.bzl",
+    ],
+    visibility = ["//prebuilt:__pkg__"],
+)

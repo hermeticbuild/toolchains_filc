@@ -11,6 +11,13 @@ cp "$archive" first.tar.gz
 bash "$root/.github/workflows/release_prep.sh" v0.0.0-ci HEAD > repeated-notes.md
 cmp first.tar.gz "$archive"
 cmp release-notes.md repeated-notes.md
+tar -tzf toolchains_filc-v0.0.0-ci.docs.tar.gz | LC_ALL=C sort > actual-docs.txt
+printf '%s\n' \
+    docs/filc.binaryproto \
+    docs/filc_run.binaryproto \
+    docs/filc_runtime.binaryproto \
+    docs/filc_test.binaryproto > expected-docs.txt
+diff -u expected-docs.txt actual-docs.txt
 tar -xzf "$archive"
 cd toolchains_filc-0.0.0-ci
 test -f LICENSE

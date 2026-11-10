@@ -25,8 +25,9 @@ initial module release is `0.1.0`, using Fil-C `0.687` and LLVM auxiliary tools
    consumer jobs pass: latest stable Bazel 9.x, Linux AMD64/ARM64, and musl/glibc.
 3. Create and push a `vVERSION` tag on that reviewed commit. For the initial
    release this is `v0.1.0`. Tagging starts `.github/workflows/release.yml`.
-4. The workflow reruns the checks, creates and attests the source archive, and
-   creates a draft GitHub release. Publish to BCR then generates the registry
+4. The workflow reruns the checks, creates and attests the source and API docs
+   archives, and creates a draft GitHub release. API protos are extracted from
+   the committed source archive. Publish to BCR then generates the registry
    entry and its attestations, uploads them to that draft, and opens a draft
    BCR pull request. Only after this succeeds does the final job publish the
    GitHub release. BCR acceptance remains a separate review step.
@@ -48,6 +49,7 @@ The release script archives the tagged Git tree and uses `gzip -n` for stable
 compression. The source template expects:
 
 - Asset: `toolchains_filc-vVERSION.tar.gz`.
+- API docs asset: `toolchains_filc-vVERSION.docs.tar.gz`, linked by `docs_url`.
 - Strip prefix: `toolchains_filc-VERSION`.
 - Included: Bazel integration, licenses, BCR templates, docs, and consumer example.
 - Excluded: GitHub workflows, untracked development suites, local rc files,
@@ -61,8 +63,9 @@ After committing the preparation changes, run on Linux AMD64:
 ```
 
 Use the `aarch64` configurations on Linux ARM64. The script compares two
-independently generated archives and release notes, checks the extracted layout,
-then tests the packaged sources through `examples/smoke`'s `local_path_override`.
+independently generated source archives and release notes, checks the API docs
+archive contains exactly the four public API protos, checks the extracted source
+layout, then tests the packaged sources through `examples/smoke`'s `local_path_override`.
 Scratch directories are printed and retained for inspection. Nothing is tagged,
 uploaded, or submitted. To prepare only the archive and notes from a committed ref:
 
@@ -70,8 +73,27 @@ uploaded, or submitted. To prepare only the archive and notes from a committed r
 bash /path/to/toolchains_filc/.github/workflows/release_prep.sh v0.1.0 HEAD
 ```
 
-Run that command in a scratch directory; the archive is written there and notes
+Run that command in a scratch directory; both archives are written there and notes
 go to stdout. Set `USE_BAZEL_VERSION=9.0.0` to check the minimum supported version.
+
+## API documentation
+
+`//docs:api` uses Bazel 9's built-in `starlark_doc_extract` to generate
+`stardoc_output.ModuleInfo` binary protos for the `filc` extension and the
+`filc_run`, `filc_test`, and `filc_runtime` rules. Dependency filegroups supply
+the loaded Starlark sources; private implementation symbols are not exported
+into the reference. No Markdown renderer or additional rules dependency is used.
+
+To build and package the reference from the current checkout:
+
+```sh
+bash docs/package.sh /tmp/toolchains_filc.docs.tar.gz
+```
+
+The release workflow uploads and attests this archive alongside the source
+archive. The registry UI renders it through `.bcr/source.template.json`'s
+`docs_url`; the README remains the setup and usage guide. See
+[BCR Starlark API documentation](https://github.com/bazelbuild/bazel-central-registry/blob/main/docs/stardoc.md).
 
 ## Provenance and attestations
 
@@ -80,7 +102,7 @@ The setup follows
 and [`rules_qemu`'s BCR templates](https://github.com/hermeticbuild/rules_qemu/tree/de0cdb392c5a4095528122a0725d48eec9c6befd/.bcr).
 It uses:
 
-- `bazel-contrib/.github`'s `release_ruleset.yaml@v7.7.0` for source-archive provenance.
+- `bazel-contrib/.github`'s `release_ruleset.yaml@v7.7.0` for source- and docs-archive provenance.
 - `bazel-contrib/publish-to-bcr`'s `publish.yaml@v1.7.0`, with `attest: true`,
   for `MODULE.bazel` and `source.json` provenance and the generated
   `attestations.json` registry manifest.
@@ -90,11 +112,13 @@ uses their workflow identities. Individual checkout and setup actions are pinned
 to commits. The publisher generates the standard attestation template, so no
 hand-maintained `.bcr/attestations.template.json` is needed.
 
-The draft release should contain these four assets before publication:
+The draft release should contain these six assets before publication:
 
 ```text
 toolchains_filc-vVERSION.tar.gz
 toolchains_filc-vVERSION.tar.gz.intoto.jsonl
+toolchains_filc-vVERSION.docs.tar.gz
+toolchains_filc-vVERSION.docs.tar.gz.intoto.jsonl
 MODULE.bazel.intoto.jsonl
 source.json.intoto.jsonl
 ```
@@ -104,6 +128,7 @@ check to pass for all three subjects:
 
 ```sh
 gh attestation verify toolchains_filc-vVERSION.tar.gz --repo hermeticbuild/toolchains_filc
+gh attestation verify toolchains_filc-vVERSION.docs.tar.gz --repo hermeticbuild/toolchains_filc
 ```
 
 Local packaging checks cannot generate or verify the release's OIDC signatures.

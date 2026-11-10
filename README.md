@@ -170,4 +170,6 @@ the extracted release archive on both CPUs with the latest stable Bazel 9.x.
 The BCR presubmit uses the same consumer on that track. These native tests do
 not cover cross-compilation or a macOS client driving remote execution.
 
-See [release maintenance](docs/releasing.md) for publishing and attestations.
+Releases include the public Starlark API reference as `.binaryproto` files for
+the BCR documentation UI. Build them locally with `bazel build //docs:api`.
+See [release maintenance](docs/releasing.md) for packaging, publishing, and attestations.

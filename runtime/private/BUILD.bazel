@@ -1,1 +1,8 @@
 # Shared deployment implementation; public rules live in //runtime.
+
+filegroup(
+    name = "deployment_sources",
+    testonly = True,
+    srcs = ["deployment.bzl"],
+    visibility = ["//docs:__pkg__"],
+)

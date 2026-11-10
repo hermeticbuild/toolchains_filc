@@ -5,3 +5,13 @@ exports_files([
     "sarcasm.sh.tpl",
     "toolchains.BUILD.bazel",
 ])
+
+filegroup(
+    name = "extension_sources",
+    testonly = True,
+    srcs = [
+        "releases.bzl",
+        "//prebuilt/repositories:extension_sources",
+    ],
+    visibility = ["//docs:__pkg__"],
+)
