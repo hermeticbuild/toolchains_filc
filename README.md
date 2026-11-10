@@ -12,34 +12,19 @@ remote builds; the compiler and output programs run on Linux.
 
 ## Setup
 
-There is no BCR release yet. Add this to your `MODULE.bazel`:
+The first BCR release is being prepared. Once `0.1.0` is available in the
+[Bazel Central Registry](https://registry.bazel.build/modules/toolchains_filc),
+add this to your `MODULE.bazel`:
 
 ```starlark
-bazel_dep(name = "toolchains_filc", version = "0.0.0")
+bazel_dep(name = "toolchains_filc", version = "0.1.0")
 bazel_dep(name = "llvm", version = "0.8.26")
 bazel_dep(name = "platforms", version = "1.1.0")
 bazel_dep(name = "rules_cc", version = "0.2.25")
 
-git_override(
-    module_name = "toolchains_filc",
-    commit = "2c3f0906b6232b301e0ff64444a26a418203c4bd",
-    remote = "https://github.com/hermeticbuild/toolchains_filc.git",
-)
-
-# llvm 0.8.26 does not include kernel_headers.configure yet.
-git_override(
-    module_name = "llvm",
-    commit = "3dd710dd9cb57adc0a8baf4220f5bc1e38ebd9bc",
-    remote = "https://github.com/hermeticbuild/hermetic-llvm.git",
-)
-
 llvm = use_extension("@llvm//extensions:llvm.bzl", "llvm")
 llvm.version(llvm_version = "21.1.8")
 use_repo(llvm, "llvm-project")
-
-kernel_headers = use_extension("@llvm//kernel/extension:kernel_headers.bzl", "kernel_headers")
-kernel_headers.configure(default_version = "6.16")
-use_repo(kernel_headers, "kernel_headers")
 
 filc = use_extension("@toolchains_filc//extensions:filc.bzl", "filc")
 filc.prebuilt(version = "0.687")
@@ -48,9 +33,25 @@ use_repo(filc, "filc_toolchains")
 register_toolchains("@filc_toolchains//:all")
 ```
 
+Until the BCR submission is merged, also use the `archive_override` from the
+GitHub release notes. For development against this checkout, use
+`local_path_override(module_name = "toolchains_filc", path = "/path/to/toolchains_filc")`.
+
 The LLVM version above selects auxiliary tools such as the linker; the C/C++
-compiler comes from Fil-C. Kernel-header selection applies to musl targets;
-glibc targets use the headers bundled with Fil-C's glibc distribution.
+compiler comes from Fil-C. Musl targets use LLVM's kernel-header defaults;
+glibc targets use the headers bundled with Fil-C's glibc distribution. To select
+musl kernel headers explicitly with `llvm@0.8.26`, add a kernel constraint to your
+target platform:
+
+```starlark
+platform(
+    name = "linux_x86_64_kernel_6_16",
+    parents = ["@toolchains_filc//:linux_x86_64"],
+    constraint_values = ["@llvm//constraints/kernel/linux:6.16"],
+)
+```
+
+Build with `--platforms=//:linux_x86_64_kernel_6_16` to use that selection.
 
 ## Build
 
@@ -149,3 +150,22 @@ bazel test //:hello_test --platforms=@toolchains_filc//:linux_x86_64_gnu.2.44
 
 Apache 2.0; see [LICENSE](LICENSE) and [NOTICE](NOTICE). Downloaded Fil-C components
 retain their own licenses; see [distribution and redistribution notes](prebuilt/LICENSING.md).
+
+## Development and releases
+
+The [consumer example](examples/smoke) exercises ordinary C/C++ libraries,
+musl static tests, and musl/glibc dynamic runtime bundles. On a Linux host with
+the matching CPU:
+
+```sh
+cd examples/smoke
+bazel test //... --config=musl_x86_64
+bazel test //... --config=glibc_x86_64
+```
+
+Use `musl_aarch64` and `glibc_aarch64` on Linux ARM64. CI runs the example from
+the extracted release archive on both CPUs with Bazel 9.0.0 and 9.3.1. The BCR
+presubmit uses the same consumer on the Bazel 9.x track. These native tests do
+not cover cross-compilation or a macOS client driving remote execution.
+
+See [release maintenance](docs/releasing.md) for publishing and attestations.

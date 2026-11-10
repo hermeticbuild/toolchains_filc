@@ -1,0 +1,8 @@
+import %workspace%/../../.bazelrc
+
+build --platforms=//:linux_x86_64_musl
+build:musl_x86_64 --platforms=//:linux_x86_64_musl
+build:musl_aarch64 --platforms=//:linux_aarch64_musl
+build:glibc_x86_64 --platforms=//:linux_x86_64_glibc
+build:glibc_aarch64 --platforms=//:linux_aarch64_glibc
+test --test_output=errors

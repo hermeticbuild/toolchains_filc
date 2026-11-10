@@ -1,0 +1,75 @@
+load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
+load("@toolchains_filc//runtime:filc_run.bzl", "filc_run")
+load("@toolchains_filc//runtime:filc_test.bzl", "filc_test")
+
+[
+    platform(
+        name = "linux_" + cpu + "_musl",
+        # llvm 0.8.26 supports selecting kernel headers by platform constraint.
+        constraint_values = ["@llvm//constraints/kernel/linux:6.16"],
+        parents = ["@toolchains_filc//:linux_" + cpu],
+    )
+    for cpu in [
+        "x86_64",
+        "aarch64",
+    ]
+]
+
+[
+    platform(
+        name = "linux_" + cpu + "_glibc",
+        parents = ["@toolchains_filc//:linux_" + cpu + "_gnu.2.44"],
+    )
+    for cpu in [
+        "x86_64",
+        "aarch64",
+    ]
+]
+
+cc_library(
+    name = "answer",
+    srcs = ["answer.c"],
+    hdrs = ["answer.h"],
+)
+
+cc_test(
+    name = "static_cpp_test",
+    size = "small",
+    srcs = ["smoke.cc"],
+    linkstatic = True,
+    target_compatible_with = ["@llvm//constraints/libc:musl"],
+    deps = ["answer"],
+)
+
+cc_binary(
+    name = "dynamic_c",
+    srcs = ["smoke.c"],
+    linkstatic = False,
+    deps = ["answer"],
+)
+
+cc_binary(
+    name = "dynamic_cpp",
+    srcs = ["smoke.cc"],
+    linkstatic = False,
+    deps = ["answer"],
+)
+
+filc_test(
+    name = "dynamic_c_test",
+    size = "small",
+    binary = "dynamic_c",
+)
+
+filc_test(
+    name = "dynamic_cpp_test",
+    size = "small",
+    binary = "dynamic_cpp",
+)
+
+filc_run(
+    name = "hello",
+    binary = "dynamic_cpp",
+)

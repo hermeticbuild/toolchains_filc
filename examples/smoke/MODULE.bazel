@@ -1,0 +1,21 @@
+module(name = "toolchains_filc_smoke")
+
+bazel_dep(name = "toolchains_filc", version = "0.1.0")
+bazel_dep(name = "llvm", version = "0.8.26")
+bazel_dep(name = "platforms", version = "1.1.0")
+bazel_dep(name = "rules_cc", version = "0.2.25")
+
+local_path_override(
+    module_name = "toolchains_filc",
+    path = "../..",
+)
+
+llvm = use_extension("@llvm//extensions:llvm.bzl", "llvm")
+llvm.version(llvm_version = "21.1.8")
+use_repo(llvm, "llvm-project")
+
+filc = use_extension("@toolchains_filc//extensions:filc.bzl", "filc")
+filc.prebuilt(version = "0.687")
+use_repo(filc, "filc_toolchains")
+
+register_toolchains("@filc_toolchains//:all")
