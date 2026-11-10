@@ -154,7 +154,9 @@ retain their own licenses; see [distribution and redistribution notes](prebuilt/
 ## Development and releases
 
 The [consumer example](examples/smoke) exercises ordinary C/C++ libraries,
-musl static tests, and musl/glibc dynamic runtime bundles. On a Linux host with
+musl static tests, musl/glibc dynamic runtime bundles, and
+[upstream memory-safety cases](examples/smoke/safety) for out-of-bounds access
+and use-after-free. On a Linux host with
 the matching CPU:
 
 ```sh

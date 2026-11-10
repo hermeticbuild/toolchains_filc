@@ -73,3 +73,33 @@ filc_run(
     name = "hello",
     binary = "dynamic_cpp",
 )
+
+[
+    cc_library(
+        name = "upstream_" + scenario,
+        srcs = ["safety/upstream/" + scenario + "/" + scenario + ".c"],
+        linkstatic = True,
+        # Preserve the upstream files verbatim; call their entrypoints in children.
+        local_defines = ["main=filc_test_" + scenario],
+    )
+    for scenario in [
+        "arrayoob",
+        "uaf",
+    ]
+]
+
+cc_binary(
+    name = "memory_safety",
+    srcs = ["safety/memory_safety.c"],
+    linkstatic = False,
+    deps = [
+        "upstream_arrayoob",
+        "upstream_uaf",
+    ],
+)
+
+filc_test(
+    name = "memory_safety_test",
+    size = "small",
+    binary = "memory_safety",
+)
