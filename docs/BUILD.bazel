@@ -1,0 +1,46 @@
+# Only public APIs belong in the BCR reference.
+starlark_doc_extract(
+    name = "filc",
+    testonly = True,
+    src = "//extensions:filc.bzl",
+    render_main_repo_name = True,
+    symbol_names = ["filc"],
+    deps = ["//prebuilt:extension_sources"],
+)
+
+[
+    starlark_doc_extract(
+        name = symbol,
+        testonly = True,
+        src = "//runtime:" + symbol + ".bzl",
+        render_main_repo_name = True,
+        symbol_names = [symbol],
+        deps = [
+            "//runtime/private:deployment_sources",
+            "@rules_cc//cc:find_cc_toolchain_bzl",
+        ],
+    )
+    for symbol in [
+        "filc_run",
+        "filc_test",
+    ]
+]
+
+starlark_doc_extract(
+    name = "filc_runtime",
+    testonly = True,
+    src = "//runtime:filc_runtime.bzl",
+    render_main_repo_name = True,
+    symbol_names = ["filc_runtime"],
+)
+
+filegroup(
+    name = "api",
+    testonly = True,
+    srcs = [
+        "filc",
+        "filc_run",
+        "filc_runtime",
+        "filc_test",
+    ],
+)

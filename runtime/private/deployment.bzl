@@ -119,8 +119,15 @@ exec "$root/lib/{loader}" --library-path "$root/lib" "$root/bin/app" "$@"
     )]
 
 RUN_ATTRS = {
-    "binary": attr.label(mandatory = True, cfg = "target"),
-    "plugins": attr.label_list(allow_files = True),
+    "binary": attr.label(
+        mandatory = True,
+        cfg = "target",
+        doc = "Dynamic Fil-C executable, typically a rules_cc cc_binary with linkstatic = False.",
+    ),
+    "plugins": attr.label_list(
+        allow_files = True,
+        doc = "Additional shared libraries loaded at runtime, including their runfiles.",
+    ),
     "_test": attr.bool(default = False),
     "_check": attr.label(default = "//runtime:check_bundle.sh", allow_single_file = True),
     "_licenses": attr.label_list(

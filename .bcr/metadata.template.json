@@ -1,0 +1,13 @@
+{
+  "homepage": "https://github.com/hermeticbuild/toolchains_filc",
+  "maintainers": [
+    {
+      "github": "cerisier",
+      "github_user_id": 1126594,
+      "name": "Corentin Kerisit"
+    }
+  ],
+  "repository": ["github:hermeticbuild/toolchains_filc"],
+  "versions": [],
+  "yanked_versions": {}
+}

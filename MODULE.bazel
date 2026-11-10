@@ -1,6 +1,6 @@
 module(
     name = "toolchains_filc",
-    version = "0.0.0",
+    version = "0.1.0",
     bazel_compatibility = [">=9.0.0"],
 )
 
@@ -28,6 +28,8 @@ use_repo(
 filc_development = use_extension("//extensions:filc.bzl", "filc", dev_dependency = True)
 filc_development.prebuilt(version = "0.687")
 
-# The consuming root selects the kernel version using this shared extension.
+# Share the kernel header repositories provided by the selected LLVM module.
 kernel_headers = use_extension("@llvm//kernel/extension:kernel_headers.bzl", "kernel_headers")
 use_repo(kernel_headers, "kernel_headers")
+
+bazel_dep(name = "buildifier_prebuilt", version = "8.2.1", dev_dependency = True)

@@ -4,6 +4,10 @@ https://github.com/llvm/llvm-project/blob/llvmorg-21.1.8/llvm/lib/Support/Comman
 Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
 The complete license is in toolchain/tools/LLVM-LICENSE.txt.
 
+examples/smoke/safety/upstream contains unmodified arrayoob and uaf tests and
+their manifests from pizlonator/fil-c revision 2db72c646daa1acad2754bcb0e2f220f732e9789.
+See examples/smoke/safety/README.md for their source and test expectations.
+
 Fil-C compiler/runtime distributions are downloaded separately and retain their
 upstream licenses. See prebuilt/LICENSING.md for their scope and deployment.
 

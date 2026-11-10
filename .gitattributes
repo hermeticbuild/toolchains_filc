@@ -1,0 +1,2 @@
+# Keep the consumer example and BCR templates in release archives.
+/.github export-ignore

@@ -33,5 +33,17 @@ def _filc_impl(mctx):
 
 filc = module_extension(
     implementation = _filc_impl,
-    tag_classes = {"prebuilt": tag_class(attrs = {"version": attr.string(mandatory = True)})},
+    doc = """Declares the pinned Fil-C compiler and matched Linux target distributions.
+
+The consuming root must provide exactly one `prebuilt(version = "0.687")` tag,
+import `filc_toolchains`, and register `@filc_toolchains//:all`. The compiler runs
+on Linux AMD64 or ARM64; target toolchains support musl and Fil-C glibc 2.44.
+""",
+    tag_classes = {"prebuilt": tag_class(
+        attrs = {"version": attr.string(
+            mandatory = True,
+            doc = "Fil-C distribution version. This module supports only 0.687.",
+        )},
+        doc = "Selects the pinned Fil-C distribution; required once across the module graph.",
+    )},
 )
