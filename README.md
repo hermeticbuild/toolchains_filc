@@ -166,8 +166,8 @@ bazel test //... --config=glibc_x86_64
 ```
 
 Use `musl_aarch64` and `glibc_aarch64` on Linux ARM64. CI runs the example from
-the extracted release archive on both CPUs with Bazel 9.0.0 and 9.3.1. The BCR
-presubmit uses the same consumer on the Bazel 9.x track. These native tests do
+the extracted release archive on both CPUs with the latest stable Bazel 9.x.
+The BCR presubmit uses the same consumer on that track. These native tests do
 not cover cross-compilation or a macOS client driving remote execution.
 
 See [release maintenance](docs/releasing.md) for publishing and attestations.

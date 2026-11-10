@@ -21,8 +21,8 @@ initial module release is `0.1.0`, using Fil-C `0.687` and LLVM auxiliary tools
 1. Update `MODULE.bazel`, the consumer's dependency version, and the README for
    the intended release. Keep dependency versions available in the BCR; the
    consumer must work without a Git override for LLVM.
-2. Merge the release changes after repository checks and all eight archive
-   consumer jobs pass: Bazel 9.0.0/9.3.1, Linux AMD64/ARM64, and musl/glibc.
+2. Merge the release changes after repository checks and all four archive
+   consumer jobs pass: latest stable Bazel 9.x, Linux AMD64/ARM64, and musl/glibc.
 3. Create and push a `vVERSION` tag on that reviewed commit. For the initial
    release this is `v0.1.0`. Tagging starts `.github/workflows/release.yml`.
 4. The workflow reruns the checks, creates and attests the source archive, and

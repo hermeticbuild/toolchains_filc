@@ -15,7 +15,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        bazel: ['9.0.0', '9.3.1']
+        bazel: ['9.x']
         cpu: [x86_64, aarch64]
         libc: [musl, glibc]
         include:
