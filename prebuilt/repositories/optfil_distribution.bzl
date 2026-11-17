@@ -19,7 +19,13 @@ def _optfil_distribution_impl(rctx):
     # publishing a corrupted tree when the repository filesystem folds case.
     if rctx.read("fil/include/linux/netfilter/xt_DSCP.h") == rctx.read("fil/include/linux/netfilter/xt_dscp.h"):
         fail("Optfil headers require a case-sensitive repository filesystem; use a Linux Bazel host or a case-sensitive output/repository cache directory")
-    rctx.extract("fil.tar.xz", output = "fil/lib", stripPrefix = "fil/lib")
+    rctx.extract(
+        "fil.tar.xz",
+        output = "fil/lib",
+        stripPrefix = "fil/lib",
+        # Skip the link into the omitted share tree before link validation.
+        rename_files = {"fil/lib/terminfo": "fil/share/terminfo-link"},
+    )
 
     # The installer assumes /opt/fil. Keep the three linker scripts' GROUP and
     # AS_NEEDED semantics; the driver's declared -L path resolves these names.
